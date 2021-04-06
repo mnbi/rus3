@@ -12,6 +12,7 @@ module Rus3
   EMSG = {
     :pair_required => "pair required: got=%s",
     :list_required => "proper list required: got=%s",
+    :out_of_range  => "argument out of range: got=%s",
   }
 
   # :startdoc:
@@ -25,6 +26,12 @@ module Rus3
   class ListRequiredError < Error
     def initialize(obj)
       super(EMSG[:list_required] % actual(obj))
+    end
+  end
+
+  class OutOfRangeError < Error
+    def initialize(obj)
+      super(EMSG[:out_of_range] % actual(obj))
     end
   end
 

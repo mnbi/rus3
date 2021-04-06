@@ -87,6 +87,29 @@ module Rus3
       end
       module_function :append
 
+      # Returns the sublist of the arguemnt by omitting the first k
+      # elements.  The 2nd argument, k must be in 0..(length(lst)-1).
+      #
+      # This implementation logic comes from R5RS 6.3.2.
+      def list_tail(lst, k)
+        raise ListRequiredError, lst unless list?(lst)
+        raise OutOfRangeError, k if k >= length(lst)
+        if zero?(k)
+          lst
+        else
+          list_tail(cdr(lst), k - 1)
+        end
+      end
+      module_function :list_tail
+
+      # Returns kth element of the argument.
+      def list_ref(lst, k)
+        raise ListRequiredError, lst unless list?(lst)
+
+        car(list_tail lst, k)
+      end
+      module_function :list_ref
+
       # Returns the length of the arguemnt.  If the argument is not a
       # proper list, raises ListRequiredError.
       def length(lst)
@@ -99,6 +122,17 @@ module Rus3
         count
       end
       module_function :length
+
+      # Returns a list of the same elements in reverse order.
+      def reverse(lst)
+        raise ListRequiredError, lst unless list?(lst)
+        if null?(lst)
+          EMPTY_LIST
+        else
+          append_2(reverse(cdr(lst)), list(car(lst)))
+        end
+      end
+      module_function :reverse
 
     end
   end

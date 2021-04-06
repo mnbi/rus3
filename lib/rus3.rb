@@ -26,7 +26,16 @@ module Rus3
   EMPTY_LIST = nil
 
   # Indicates the values is not specified in the Scheme specification.
-  UNDEF = :rus3_undef_value
+  require "singleton"
+  class Undef
+    include Singleton
+
+    def to_s
+      "\#<undef>"
+    end
+  end
+  UNDEF = Undef.instance
+
 
   include Procedure::Predicate
   include Procedure::List
