@@ -22,12 +22,8 @@ module Rus3
           null_to_string(obj)
         elsif list?(obj)
           # (1 (2 3) 4))
-          prc_to_string = lambda { |e| any_to_string(e) }
-          result = map1(prc_to_string, obj)
-          prc_join = lambda { |r, e| r + " #{e}" }
-          str = "#{car(result)}"
-          str = fold(prc_join, str, cdr(result))
-          "(#{str})"
+          result = obj.map_array { |e| any_to_string(e) }
+          "(#{result.join(' ')})"
         else
           # (1 2 3 . 4)))
           # TODO: ...

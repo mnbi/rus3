@@ -16,7 +16,8 @@ module Rus3
       # accepts only one argument.
       def map1(prc, lst)
         return EMPTY_LIST if null?(lst)
-        cons(prc.call(car(lst)), map1(prc, cdr(lst)))
+        raise ListRequiredError, lst unless list?(lst)
+        lst.map(&prc)
       end
 
       def zip2(lst1, lst2)
@@ -58,19 +59,21 @@ module Rus3
 
       def for_each1(prc, lst)
         return EMPTY_LIST if null?(lst)
-        prc.call(car(lst))
-        for_each1(prc, cdr(lst))
+        raise ListRequiredError, lst unless list?(lst)
+        lst.each(&prc)
         UNDEF
       end
 
       def for_each(prc, *lists)
+        # TODO: ...
         EMPTY_LIST
       end
       module_function :for_each
 
       def fold(prc, initial, lst)
         return initial if null?(lst)
-        fold(prc, prc.call(initial, car(lst)), cdr(lst))
+        raise ListRequiredError, lst unless list?(lst)
+        lst.reduce(initial, &prc)
       end
 
     end

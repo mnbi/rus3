@@ -53,9 +53,7 @@ module Rus3
 
       # Constructs a list from arguments in its order.
       def list(*objs)
-        objs.reverse_each.reduce(nil) { |r, obj|
-          cons(obj, r)
-        }
+        Pair.list(*objs)
       end
       module_function :list
 

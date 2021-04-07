@@ -13,6 +13,7 @@ module Rus3
     :pair_required => "pair required: got=%s",
     :list_required => "proper list required: got=%s",
     :out_of_range  => "argument out of range: got=%s",
+    :unsupported_method => "specified method does not work now.",
   }
 
   # :startdoc:
@@ -32,6 +33,12 @@ module Rus3
   class OutOfRangeError < Error
     def initialize(obj)
       super(EMSG[:out_of_range] % actual(obj))
+    end
+  end
+
+  class UnsupportedMethodError < Error
+    def initialize
+      super(EMSG[:unsupported_method])
     end
   end
 
