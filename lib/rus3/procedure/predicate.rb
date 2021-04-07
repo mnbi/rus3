@@ -19,14 +19,15 @@ module Rus3
         if null?(obj)
           true
         elsif pair?(obj)
-          cdr = obj.cdr while pair?(cdr)
-          null?(cdr)
+          cdr_part = obj.cdr
+          cdr_part = cdr_part.cdr while pair?(cdr_part)
+          null?(cdr_part)
         else
           false
         end
       end
 
-      # :nodoc:
+      # :stopdoc:
 
       # Equivalence predicates:
       #
@@ -47,7 +48,7 @@ module Rus3
         obj1 == obj2
       end
 
-      # :nodoc:
+      # :stopdoc:
 
       # Value types:
       #
@@ -66,7 +67,8 @@ module Rus3
       #   vector? ----> Array
       #   port? ------> Rus3::Port
       #   procedure? -> Proc
-      #
+
+      # :startdoc:
 
       def boolean?(obj)
         obj.is_a?(FalseClass) || obj.is_a?(TrueClass)

@@ -21,13 +21,34 @@ module Rus3
           # ()
           null_to_string(obj)
         elsif list?(obj)
-          # (1 (2 3) 4))
-          result = obj.map_array { |e| any_to_string(e) }
-          "(#{result.join(' ')})"
+          # (1 2 3 4)
+          # ==> (1 . (2 . (3 . (4 . ())))
+
+          result = any_to_string(obj.car)
+          cp = obj.cdr
+
+          until null?(cp)
+            result += " "
+            result += any_to_string(cp.car)
+            cp = cp.cdr
+          end
+
+          "(#{result})"
         else
-          # (1 2 3 . 4)))
-          # TODO: ...
-          obj.to_s
+          # (1 2 3 . 4)
+          # ==> (1 . (2 . (3 . 4)))
+          result = any_to_string(obj.car)
+          cp = obj.cdr
+
+          while pair?(cp)
+            result += " "
+            result += any_to_string(cp.car)
+            cp = cp.cdr
+          end
+
+          result += " . "
+          result += any_to_string(cp)
+          "(#{result})"
         end
       end
 
