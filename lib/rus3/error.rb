@@ -2,8 +2,9 @@
 
 module Rus3
   class Error < StandardError
-    def actual(obj)
-      Rus3::Procedure::Predicate.null?(obj) ? "()" : obj
+    include EmptyList
+    def actual(obj)             # :nodoc:
+      null?(obj) ? "()" : obj
     end
   end
 
@@ -44,8 +45,8 @@ module Rus3
   end
 
   class WrongTypeError < Error
-    def initialize(actual, expected)
-      emsg = EMSG[:wrong_type] % [actual, expected]
+    def initialize(obj, expected)
+      emsg = EMSG[:wrong_type] % [obj, expected]
       super(emsg)
     end
   end

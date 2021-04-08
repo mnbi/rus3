@@ -90,7 +90,6 @@ module Rus3
       #   - R7RS procedure: (caar pair)
 
       def caar(pair)
-        check_pair(pair)
         car(car(pair))
       end
 
@@ -100,7 +99,6 @@ module Rus3
       #   - R7RS procedure: (cadr pair)
 
       def cadr(pair)
-        check_pair(pair)
         car(cdr(pair))
       end
 
@@ -110,7 +108,6 @@ module Rus3
       #   - R7RS procedure: (cdar pair)
 
       def cdar(pair)
-        check_pair(pair)
         cdr(car(pair))
       end
 
@@ -120,7 +117,6 @@ module Rus3
       #   - R7RS procedure: (cddr pair)
 
       def cddr(pair)
-        check_pair(pair)
         cdr(cdr(pair))
       end
       module_function :caar, :cadr, :cdar, :cddr
@@ -209,7 +205,8 @@ module Rus3
       module_function :reverse
 
       # Returns the sublist of the arguemnt by omitting the first k
-      # elements.  The 2nd argument, k must be in 0..(length(lst)-1).
+      # elements.  The 2nd argument, k must be in 0..length(lst),
+      # otherwise raises OutOfRangeError.
       #
       # This implementation logic comes from R5RS 6.3.2.
       #
@@ -218,7 +215,7 @@ module Rus3
 
       def list_tail(lst, k)
         check_list(lst)
-        check_upper_limit(k, length(lst))
+        check_upper_limit(k, length(lst)+1)
 
         if zero?(k)
           lst
@@ -228,7 +225,8 @@ module Rus3
       end
       module_function :list_tail
 
-      # Returns kth element of the argument.
+      # Returns kth element of the argument.  If the 2nd argument is
+      # greater than length of the list, raises OutOfRangeError.
       #
       #   - R5RS library procedure: (list-ref list k)
       #   - R7RS procedure: (list-ref list k)
@@ -236,7 +234,7 @@ module Rus3
       def list_ref(lst, k)
         check_list(lst)
 
-        car(list_tail lst, k)
+        car(list_tail(lst, k))
       end
       module_function :list_ref
 
