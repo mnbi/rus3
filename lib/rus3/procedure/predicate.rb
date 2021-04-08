@@ -5,13 +5,9 @@ module Rus3
     module Predicate
       extend DebugUtils if Rus3.debug_mode?
 
-      module_function
+      include Rus3::EmptyList
 
-      # Returns true if the argument is an empty list.  RuS^3 treats nil
-      # (an instance of NilClass) as an empty list.
-      def null?(obj)
-        obj.nil?
-      end
+      module_function
 
       # Returns true if the arguemnt represents a list structure.
       # Note that an empty list is a list.

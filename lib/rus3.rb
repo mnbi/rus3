@@ -11,6 +11,38 @@ module Rus3
     extend DebugUtils
   end
 
+  # An empty list is a special object in Scheme language.  The role
+  # roughly corresponds to the one of 'nil' in Ruby.
+
+  module EmptyList
+
+    # Represents an empty list.
+    EMPTY_LIST = nil
+
+    # Returns true if the argument is an empty list.  RuS^3 treats nil
+    # (an instance of NilClass) as an empty list.
+
+    def null?(obj)
+      obj.nil?
+    end
+    module_function :null?
+
+  end
+
+  # Indicates the values is not specified in the Scheme specification.
+  # This value is intended using to be returned from procedures those
+  # does not have any specified value as its return value.
+
+  require "singleton"
+  class Undef
+    include Singleton
+
+    def to_s
+      "\#<undef>"
+    end
+  end
+  UNDEF = Undef.instance
+
   require_relative "rus3/version"
   require_relative "rus3/error"
 
@@ -23,22 +55,9 @@ module Rus3
   require_relative "rus3/char"
   require_relative "rus3/port"
 
-  EMPTY_LIST = nil
-
-  # Indicates the values is not specified in the Scheme specification.
-  require "singleton"
-  class Undef
-    include Singleton
-
-    def to_s
-      "\#<undef>"
-    end
-  end
-  UNDEF = Undef.instance
-
-
-  include Procedure::Predicate
-  include Procedure::List
-  include Procedure::Control
   include Procedure::Write
+  include Procedure::Control
+  include Procedure::List
+  include Procedure::Predicate
+  include EmptyList
 end

@@ -14,6 +14,7 @@ module Rus3
       extend DebugUtils if Rus3.debug_mode?
 
       include Predicate
+      include Rus3::EmptyList
 
       def check_pair(pair)      # :nodoc:
         raise PairRequiredError, pair unless pair?(pair)

@@ -5,11 +5,12 @@ module Rus3
     module Write
       extend DebugUtils if Rus3.debug_mode?
 
-      include Predicate
       include Control
+      include Predicate
+      include Rus3::EmptyList
 
-     def null_to_string(obj)
-       "()"
+      def null_to_string(obj)
+        "()"
       end
 
       def boolean_to_string(obj)

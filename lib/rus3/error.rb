@@ -14,6 +14,7 @@ module Rus3
     :list_required => "proper list required: got=%s",
     :out_of_range  => "argument out of range: got=%s",
     :unsupported_method => "specified method does not work now.",
+    :wrong_type => "wrong type argument: got=%s, wants=%s",
   }
 
   # :startdoc:
@@ -39,6 +40,13 @@ module Rus3
   class UnsupportedMethodError < Error
     def initialize
       super(EMSG[:unsupported_method])
+    end
+  end
+
+  class WrongTypeError < Error
+    def initialize(actual, expected)
+      emsg = EMSG[:wrong_type] % [actual, expected]
+      super(emsg)
     end
   end
 

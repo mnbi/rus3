@@ -5,8 +5,9 @@ module Rus3
     module Control
       extend DebugUtils if Rus3.debug_mode?
 
-      include Predicate
       include List
+      include Predicate
+      include Rus3::EmptyList
 
       # Returns a list of the results produced by applying the given
       # procedure (1st argument) to each element of the list (2nd

@@ -39,25 +39,30 @@ module Rus3
 
   class PairEnumerator < Enumerator
 
-    # :call-seq:
-    #   new(head_pair_of_list, size = nil) -> PairEnumerator
-    #     - head_pair_of_list: Pair
-    #     - size: Integer
+    class << self
+      include EmptyList
 
-    def self.new(head_pair, size = nil)
-      super(size) { |y|
-        cp, np = head_pair, head_pair.cdr
-        loop {
-          y.yield(cp.car)
-          break if null?(np)
-          cp, np = np, np.cdr
+      # :call-seq:
+      #   new(head_pair_of_list, size = nil) -> PairEnumerator
+      #     - head_pair_of_list: Pair
+      #     - size: Integer
+
+      def new(head_pair, size = nil)
+        super(size) { |y|
+          cp, np = head_pair, head_pair.cdr
+          loop {
+            y.yield(cp.car)
+            break if null?(np)
+            cp, np = np, np.cdr
+          }
         }
-      }
-    end
+      end
 
-    # Not implemented yet...
-    def self.produce(initial = nil)
-      raise UnsupportedMethodError
+      # Not implemented yet...
+      def produce(initial = nil)
+        raise UnsupportedMethodError
+      end
+
     end
 
     # Applies 'block' to each element of the target list and returns
@@ -75,8 +80,11 @@ module Rus3
   # A fundamental building block of a Scheme list structure.
   class Pair
     include Enumerable
+    include Procedure::Predicate
+    include EmptyList
 
     class << self
+
       # Constructs a Scheme list structure from Pair instances.  Each
       # argument will be an element of the list.  That is:
       #
@@ -86,10 +94,11 @@ module Rus3
       #   list(obj1, obj2, obj3) -> Pair (head pair of the list)
 
       def list(*objs)
-        objs.reverse_each.reduce(EMPTY_LIST) { |r, obj|
+        objs.reverse_each.reduce(Rus3::EMPTY_LIST) { |r, obj|
           Pair.new(obj, r)
         }
       end
+
     end
 
     # CAR part of the pair.
@@ -121,10 +130,12 @@ module Rus3
     # Compares to an other pair.
 
     def ==(other)
-      @car == other.car && @cdr == other.cdr
+      if other.instance_of?(Pair)
+        @car == other.car && @cdr == other.cdr
+      else
+        raise WrongTypeError.new(other.class, Pair)
+      end
     end
-
-    include Rus3::Procedure::Predicate
 
     # Applies the given block once for the CAR element, then follows
     # the CDR part and repeats to apply until an empty list is found
@@ -137,7 +148,8 @@ module Rus3
       block.nil? ? enum : enum.each(&block)
     end
 
-    alias :map_array :map
+    # Original 'map' defined in Enumerator.
+    define_method(:map_array, instance_method(:map))
 
     # Applies the given block once to the each CAR element, then
     # follows the CDR part and repests to apply until an empty list is
@@ -148,6 +160,8 @@ module Rus3
       enum = PairEnumerator.new(self)
       block.nil? ? enum : enum.map(&block)
     end
+
+    alias :map_list :map
 
     # Converts to an Array, which looks like as follows:
     #
