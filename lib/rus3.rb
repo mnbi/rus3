@@ -15,6 +15,7 @@ module Rus3
   # roughly corresponds to the one of 'nil' in Ruby.
 
   module EmptyList
+    extend DebugUtils if Rus3.debug_mode?
 
     # Represents an empty list.
     EMPTY_LIST = nil
@@ -25,7 +26,6 @@ module Rus3
     def null?(obj)
       obj.nil?
     end
-    module_function :null?
 
   end
 

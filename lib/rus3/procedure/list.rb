@@ -16,19 +16,6 @@ module Rus3
       include Predicate
       include Rus3::EmptyList
 
-      def check_pair(pair)      # :nodoc:
-        raise PairRequiredError, pair unless pair?(pair)
-      end
-
-      def check_list(lst)       # :nodoc:
-        raise ListRequiredError, lst unless list?(lst)
-      end
-
-      # To make sure the number is less than its upper limit.
-      def check_upper_limit(k, limit) # :nodoc:
-        raise OutOfRangeError, k if k >= limit
-      end
-
       # Constructs a Pair object with arguments.
       #
       #   - R5RS procedure: (cons obj1 obj2)
@@ -36,7 +23,6 @@ module Rus3
       def cons(obj1, obj2)
         Pair.new(obj1, obj2)
       end
-      module_function :cons
 
       # Returns the CAR part of the argument.  If the arguemnt is not
       # a pair, raises PairRequiredError.
@@ -47,7 +33,6 @@ module Rus3
         check_pair(pair)
         pair.car
       end
-      module_function :car
 
       # Returns the CDR part of the argument.  If the arguemnt is not
       # a pair, raises PairRequiredError.
@@ -58,7 +43,6 @@ module Rus3
         check_pair(pair)
         pair.cdr
       end
-      module_function :cdr
 
       # Replaces the CAR part with the 2nd argument and returns UNDEF.
       # If the 1st arguemnt is not a pair, raises PairRequiredError.
@@ -70,7 +54,6 @@ module Rus3
         pair.set_car!(obj)
         UNDEF
       end
-      module_function :set_car!
 
       # Replaces the CDR part with the 2nd argument and returns UNDEF.
       # If the 1st arguemnt is not a pair, raises PairRequiredError.
@@ -82,7 +65,6 @@ module Rus3
         pair.set_cdr!(obj)
         UNDEF
       end
-      module_function :set_cdr!
 
       # Retrieves the CAR part of the CAR part of the given pair.
       #
@@ -119,7 +101,6 @@ module Rus3
       def cddr(pair)
         cdr(cdr(pair))
       end
-      module_function :caar, :cadr, :cdar, :cddr
 
       # :stopdoc:
 
@@ -136,7 +117,6 @@ module Rus3
       def list(*objs)
         Pair.list(*objs)
       end
-      module_function :list
 
       # Returns the length of the arguemnt.  If the argument is not a
       # proper list, raises ListRequiredError.
@@ -153,15 +133,6 @@ module Rus3
           lst = cdr(lst)
         end
         count
-      end
-      module_function :length
-
-      def append2(lst1, lst2)
-        if null?(lst1)
-          lst2
-        else
-          cons(car(lst1), append2(cdr(lst1), lst2))
-        end
       end
 
       # Concatenates given lists into a single list.  Each argument
@@ -186,7 +157,6 @@ module Rus3
           append2(lists[0], append(*lists[1..-1]))
         end
       end
-      module_function :append
 
       # Returns a list of the same elements in reverse order.
       #
@@ -202,7 +172,6 @@ module Rus3
           append2(reverse(cdr(lst)), list(car(lst)))
         end
       end
-      module_function :reverse
 
       # Returns the sublist of the arguemnt by omitting the first k
       # elements.  The 2nd argument, k must be in 0..length(lst),
@@ -223,7 +192,6 @@ module Rus3
           list_tail(cdr(lst), k - 1)
         end
       end
-      module_function :list_tail
 
       # Returns kth element of the argument.  If the 2nd argument is
       # greater than length of the list, raises OutOfRangeError.
@@ -236,7 +204,6 @@ module Rus3
 
         car(list_tail(lst, k))
       end
-      module_function :list_ref
 
       # :stopdoc:
 
@@ -279,6 +246,29 @@ module Rus3
       #   - R7RS procedure: (list-copy obj)
 
       # :startdoc:
+
+      private
+
+      def check_pair(pair)      # :nodoc:
+        raise PairRequiredError, pair unless pair?(pair)
+      end
+
+      def check_list(lst)       # :nodoc:
+        raise ListRequiredError, lst unless list?(lst)
+      end
+
+      # To make sure the number is less than its upper limit.
+      def check_upper_limit(k, limit) # :nodoc:
+        raise OutOfRangeError, k if k >= limit
+      end
+
+      def append2(lst1, lst2)   # :nodoc:
+        if null?(lst1)
+          lst2
+        else
+          cons(car(lst1), append2(cdr(lst1), lst2))
+        end
+      end
 
     end
   end

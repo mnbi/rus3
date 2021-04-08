@@ -7,8 +7,6 @@ module Rus3
 
       include Rus3::EmptyList
 
-      module_function
-
       # Returns true if the arguemnt represents a list structure.
       # Note that an empty list is a list.
       def list?(obj)
