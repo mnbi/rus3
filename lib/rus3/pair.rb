@@ -84,6 +84,13 @@ module Rus3
     include EmptyList
 
     class << self
+      include EmptyList
+
+      # Returns true if the argument is an instance of Pair.
+
+      def pair?(obj)
+        obj.instance_of?(self)
+      end
 
       # Constructs a Scheme list structure from Pair instances.  Each
       # argument will be an element of the list.  That is:
@@ -94,11 +101,28 @@ module Rus3
       #   list(obj1, obj2, obj3) -> Pair (head pair of the list)
 
       def list(*objs)
-        objs.reverse_each.reduce(Rus3::EMPTY_LIST) { |r, obj|
-          Pair.new(obj, r)
+        objs.reverse_each.reduce(EMPTY_LIST) { |r, obj|
+          self.new(obj, r)
         }
       end
 
+      # Distinguishes a proper list and non-proper one.
+      #
+      # For example:
+      #   - Proper list: (1 . (2 . (3 . (4 . ()))))
+      #   - Non-proper list: (1 . (2 . (3 . 4)))
+
+      def list?(obj)
+        if null?(obj)
+          true
+        elsif pair?(obj)
+          cdr_part = obj.cdr
+          cdr_part = cdr_part.cdr while pair?(cdr_part)
+          null?(cdr_part)
+        else
+          false
+        end
+      end
     end
 
     # CAR part of the pair.

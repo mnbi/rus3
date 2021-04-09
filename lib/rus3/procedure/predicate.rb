@@ -10,15 +10,7 @@ module Rus3
       # Returns true if the arguemnt represents a list structure.
       # Note that an empty list is a list.
       def list?(obj)
-        if null?(obj)
-          true
-        elsif pair?(obj)
-          cdr_part = obj.cdr
-          cdr_part = cdr_part.cdr while pair?(cdr_part)
-          null?(cdr_part)
-        else
-          false
-        end
+        Pair.list?(obj)
       end
 
       # :stopdoc:
@@ -35,7 +27,7 @@ module Rus3
       end
 
       def eq?(obj1, obj2)
-        equal?(obj1, obj2)
+        obj1.equal?(obj2)
       end
 
       def _equal?(obj1, obj2)
@@ -69,7 +61,7 @@ module Rus3
       end
 
       def pair?(obj)
-        obj.is_a?(Pair)
+        Pair.pair?(obj)
       end
 
       def symbol?(obj)
@@ -144,23 +136,28 @@ module Rus3
       # :startdoc:
 
       def zero?(z)
-        number?(z) && z.zero?
+        raise NumberRequiredError, z unless number?(z)
+        z.zero?
       end
 
       def positive?(r)
-        real?(r) && r.positive?
+        raise RealNumberRequiredError, r unless real?(r)
+        r.positive?
       end
 
       def negative?(r)
-        real?(r) && r.negative?
+        raise RealNumberRequiredError, r unless real?(r)
+        r.negative?
       end
 
       def odd?(n)
-        integer?(n) && n.odd?
+        raise IntegerRequiredError, n unless integer?(n)
+        n.odd?
       end
 
       def even?(n)
-        integer?(n) && n.even?
+        raise IntegerRequiredError, n unless integer?(n)
+        n.even?
       end
 
       # :stopdoc:
@@ -237,43 +234,60 @@ module Rus3
 
       # :startdoc:
 
+      def check_string(*objs)
+        objs.each { |obj|
+          raise StringRequiredError, obj unless string?(obj)
+        }
+      end
+      private :check_string
+
       def string_eq?(str1, str2)
+        check_string(str1, str2)
         str1 == str2
       end
 
       def string_ci_eq?(str1, str2)
+        check_string(str1, str2)
         str1.downcase == str2.downcase
       end
 
       def string_lt?(str1, str2)
+        check_string(str1, str2)
         str1 < str2
       end
 
       def string_gt?(str1, str2)
+        check_string(str1, str2)
         str1 > str2
       end
 
       def string_le?(str1, str2)
+        check_string(str1, str2)
         str1 <= str2
       end
 
       def string_ge?(str1, str2)
+        check_string(str1, str2)
         str1 >= str2
       end
 
       def string_ci_lt?(str1, str2)
+        check_string(str1, str2)
         str1.downcase < str2.downcase
       end
 
       def string_ci_gt?(str1, str2)
+        check_string(str1, str2)
         str1.downcase > str2.downcase
       end
 
       def string_ci_le?(str1, str2)
+        check_string(str1, str2)
         str1.downcase <= str2.downcase
       end
 
       def string_ci_ge?(str1, str2)
+        check_string(str1, str2)
         str1.downcase >= str2.downcase
       end
 
