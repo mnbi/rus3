@@ -49,12 +49,10 @@ class Rus3PairTest < Minitest::Test
     refute p0 == p5
   end
 
-  def test_it_raise_when_compare_to_other_type_object
+  def test_it_always_return_false_when_compare_to_other_type_object
     p0 = Rus3::Pair.new(13, 14)
     other = [13, 14]
-    assert_raises(Rus3::WrongTypeError) {
-      p0 == other
-    }
+    refute p0 == other
   end
 
   def test_it_can_be_converted_to_array
