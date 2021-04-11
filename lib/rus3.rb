@@ -60,4 +60,6 @@ module Rus3
   include Procedure::List
   include Procedure::Predicate
   include EmptyList
+
+  require_relative "rus3/repl"
 end

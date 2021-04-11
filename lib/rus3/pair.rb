@@ -157,7 +157,7 @@ module Rus3
       if other.instance_of?(Pair)
         @car == other.car && @cdr == other.cdr
       else
-        raise WrongTypeError.new(other.class, Pair)
+        false
       end
     end
 

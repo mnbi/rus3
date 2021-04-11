@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require "rus3"
+
+include Rus3
+
+repl = Repl.new
+repl.start
