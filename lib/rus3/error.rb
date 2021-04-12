@@ -37,6 +37,7 @@ module Rus3
     :real_number_required => "real number required: got=%s",
     :number_required => "number required: got=%s",
     :string_required => "string required: got=%s",
+    :scheme_syntax_error => "syntax error as Scheme: got=%s",
   }
 
   # :startdoc:
@@ -93,6 +94,12 @@ module Rus3
   class StringRequiredError < Error
     def initialize(obj)
       super(EMSG[:string_required] % smart_error_value(obj))
+    end
+  end
+
+  class SchemeSyntaxError < Error
+    def initialize(obj)
+      super(EMSG[:scheme_syntax_error] % smart_error_value(obj))
     end
   end
 

@@ -36,10 +36,16 @@ module Rus3
 
     # Hods major component names of the REPL.
     COMPONENTS = {
-      :parser => nil,
+      :parser => Parser,
       :evaluator => Evaluator,
       :printer => nil,
     }
+
+    # Prompt for input.
+    PROMPT = "Rus3> "
+
+    # A message to print at exitting.
+    FAREWELL_MESSAGE = "Bye!"
 
     @@value_history = []        # :nodoc:
 
@@ -48,18 +54,19 @@ module Rus3
         instance_variable_set("@#{name}", klass.nil? ? self : klass.new)
       }
 
+      @prompt = nil
+      @parser.prompt = PROMPT
+
+      define_help_feature
       define_history_feature
+
       greeting
     end
 
     def loop
       msg = Kernel.loop {               # LOOP
-        begin
-          print "Rus3> "
-          exp = @parser.read(STDIN)     # READ
-        rescue EOFError => _
-          break "Bye!"
-        end
+        exp = @parser.read(STDIN)       # READ
+        break FAREWELL_MESSAGE if exp.nil?
 
         begin
           value = @evaluator.eval(exp)  # EVAL
@@ -70,8 +77,7 @@ module Rus3
 
         history_push(value)
 
-        print "==> "
-        @printer.pp(value)              # PRINT
+        @printer.print(value)              # PRINT
       }
       puts "\n#{msg}" unless msg.nil?
     end
@@ -82,7 +88,7 @@ module Rus3
       puts "- Rus3 version: #{Rus3::VERSION}"
       puts "  - REPL version: #{VERSION}"
       COMPONENTS.keys.each { |comp_name|
-        print "    - "
+        Kernel.print "    - "
         print_version(comp_name)
       }
     end
@@ -92,14 +98,41 @@ module Rus3
     protected
 
     def read(io = STDIN)
-      io.readline(chomp: true)
+      Kernel.print @prompt
+      begin
+        io.readline(chomp: true)
+      rescue EOFError => _
+        nil
+      end
     end
 
-    def pp(obj)
+    def print(obj)
+      Kernel.print "==> "
       display(obj)
     end
 
     private
+
+    def define_help_feature     # :nodoc:
+      r = @evaluator.binding.receiver
+      r.instance_eval {
+        def _help
+          puts <<HELP
+A simple REPL for Rus3.
+
+FEATURES:
+
+  History of evaluated values:
+    - `_last_value` : refers the last evaluated value (short: `_`)
+    - `_history(n)` : refers the n-th value in the history (short: `_his(n)`)
+    - `_history`    : prints all entries in the history (short: `_his`)
+
+  Help:
+    - `_help` : prints this message
+HELP
+        end
+      }
+    end
 
     def define_history_feature  # :nodoc:
       r = @evaluator.binding.receiver
@@ -115,7 +148,7 @@ module Rus3
         def _history(arg = nil)
           if arg.nil?
             @value_history.each_with_index { |value, i|
-              print "#{i}: "
+              Kernel.print "#{i}: "
               display(value)
             }
             UNDEF

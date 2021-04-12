@@ -61,6 +61,7 @@ module Rus3
   include Procedure::Predicate
   include EmptyList
 
+  require_relative "rus3/parser"
   require_relative "rus3/evaluator"
   require_relative "rus3/repl"
 end
