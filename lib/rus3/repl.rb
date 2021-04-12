@@ -11,7 +11,7 @@ module Rus3
   #   require "rus3"
   #   include Rus3
   #
-  #   repl = Repl.new(binding)
+  #   repl = Repl.new
   #   repl.start
 
   class Repl
@@ -21,36 +21,40 @@ module Rus3
 
     include EmptyList
 
-    def initialize(bind)
-      @binding = bind
-      greeting
-    end
+    # Hods major component names of the REPL.
+    COMPONENTS = {
+      :parser => nil,
+      :evaluator => Evaluator,
+      :printer => nil,
+    }
 
-    # Evaluates an expression.
-    def eval_exp(exp)
-      @binding.eval(exp)
+    def initialize
+      COMPONENTS.each { |name, klass|
+        instance_variable_set("@#{name}", klass.nil? ? self : klass.new)
+      }
+      greeting
     end
 
     # Starts REPL.
 
     def start
-      msg = loop {                          # LOOP
+      msg = loop {                      # LOOP
         begin
           print "Rus3 > "
-          exp = STDIN.readline(chomp: true) # READ
+          exp = @parser.read(STDIN)     # READ
         rescue EOFError => _
           break "Bye!"
         end
 
         begin
-          v = eval_exp(exp)                   # EVAL
+          value = @evaluator.eval(exp)  # EVAL
         rescue StandardError => e
           puts "ERROR: %s" % e
           next
         end
 
         print "==> "
-        pretty_print(v)                     # PRINT
+        @printer.pp(value)              # PRINT
       }
       puts "\n#{msg}" unless msg.nil?
     end
@@ -58,16 +62,32 @@ module Rus3
     # Shows the greeting message.
     def greeting
       puts "A simple REPL for Rus3:"
+      COMPONENTS.keys.each {|comp_name| print_version(comp_name)}
       puts "- REPL version: #{VERSION}"
       puts "- Rus3 version: #{Rus3::VERSION}"
     end
 
     # :stopdoc:
 
+    protected
+
+    def read(io = STDIN)
+      io.readline(chomp: true)
+    end
+
+    def pp(obj)
+      display(obj)
+    end
+
     private
 
-    def pretty_print(obj)
-      display(obj)
+    def print_version(comp_name)
+      component = instance_variable_get("@#{comp_name}")
+      if component.nil? or component == self
+        puts "- using built-in #{comp_name.upcase}"
+      else
+        puts "- #{component.version}"
+      end
     end
 
     # :startdoc:
