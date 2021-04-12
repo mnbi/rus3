@@ -4,5 +4,5 @@ require "rus3"
 
 include Rus3
 
-repl = Repl.new
+repl = Repl.new(binding)
 repl.start
