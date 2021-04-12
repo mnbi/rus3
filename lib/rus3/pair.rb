@@ -190,9 +190,18 @@ module Rus3
     # Converts to an Array, which looks like as follows:
     #
     #   [CAR, CDR]
+    #
+    # If the pair is a proper list, it converted as a list.  For
+    # example:
+    #
+    #   (1st 2nd 3rd ... nth) -> [1st, 2nd, 3rd, ..., nth]
 
     def to_a
-      [@car, @cdr]
+      if Pair.list?(self)
+        map_array{ |e| e }
+      else
+        [@car, @cdr]
+      end
     end
 
     # Converts to a String.  Normally, uses the dot-pair notaion which

@@ -12,6 +12,8 @@ module Rus3
     include EmptyList
 
     class Environment
+      include Rus3
+
       attr_reader :binding
 
       def initialize

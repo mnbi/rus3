@@ -2,7 +2,4 @@
 
 require "rus3"
 
-include Rus3
-
-repl = Repl.new
-repl.start
+Rus3::Repl.start

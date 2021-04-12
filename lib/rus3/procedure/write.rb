@@ -127,8 +127,8 @@ module Rus3
       end
 
       def vector_to_string(obj)
-        # TODO: Can this implementation handle nested vectors?
-        "\##{obj}".gsub(/\[/, "(").gsub(/\]/, ")")
+        result = obj.map{|e| any_to_string(e)}.join(" ")
+        "\#(#{result})"
       end
 
       def port_to_string(obj)
