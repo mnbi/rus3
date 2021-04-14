@@ -36,7 +36,7 @@ module Rus3
 
     # Hods major component names of the REPL.
     COMPONENTS = {
-      :parser => Parser,
+      :parser => Parser::Parser,
       :evaluator => Evaluator,
       :printer => nil,
     }
