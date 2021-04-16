@@ -19,7 +19,6 @@ module Rus3
   #   Rus3::Repl.start
 
   class Repl
-    include Procedure::Write
 
     # Indicates the version of the Repl class.
     VERSION = "0.1.0"
@@ -36,7 +35,7 @@ module Rus3
 
     # Hods major component names of the REPL.
     COMPONENTS = {
-      :parser => Parser::Parser,
+      :parser => Parser::SchemeParser,
       :evaluator => Evaluator,
       :printer => nil,
     }
@@ -54,8 +53,8 @@ module Rus3
         instance_variable_set("@#{name}", klass.nil? ? self : klass.new)
       }
 
-      @prompt = nil
-      @parser.prompt = PROMPT
+      @prompt = PROMPT
+      @parser.prompt = PROMPT unless @parser.nil?
 
       define_help_feature
       define_history_feature
@@ -97,24 +96,28 @@ module Rus3
 
     protected
 
+    require "readline"
+
     def read(io = STDIN)
-      Kernel.print @prompt
-      begin
-        io.readline(chomp: true)
-      rescue EOFError => _
-        nil
-      end
+      Readline::readline(@prompt, true)
+    end
+
+    def eval(exp)
+      exp
     end
 
     def print(obj)
       Kernel.print "==> "
-      display(obj)
+      pp obj
     end
 
     private
 
     def define_help_feature     # :nodoc:
+      return @evaluator.nil?
+
       r = @evaluator.binding.receiver
+
       r.instance_eval {
         def _help
           puts <<HELP
@@ -135,6 +138,8 @@ HELP
     end
 
     def define_history_feature  # :nodoc:
+      return @evaluator.nil?
+
       r = @evaluator.binding.receiver
 
       r.instance_variable_set(:@value_history, @@value_history)

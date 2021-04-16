@@ -63,5 +63,6 @@ module Rus3
 
   require_relative "rus3/parser"
   require_relative "rus3/evaluator"
+  require_relative "rus3/printer"
   require_relative "rus3/repl"
 end
