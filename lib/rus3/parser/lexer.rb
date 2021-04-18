@@ -28,7 +28,7 @@ module Rus3::Parser
     ]
 
     BOOLEAN    = /\A#(f|t)\Z/
-    IDENTIFIER = /\A[a-zA-Z_][\w]*\Z/
+    IDENTIFIER = /\A[a-zA-Z_][\w?!]*\Z/
     STRING     = /\A\"[^\"]*\"\Z/
 
     # operators

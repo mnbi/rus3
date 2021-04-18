@@ -65,7 +65,12 @@ module Rus3
 
     def loop
       msg = Kernel.loop {               # LOOP
-        exp = @parser.read(STDIN)       # READ
+        begin
+          exp = @parser.read(STDIN)     # READ
+        rescue SchemeSyntaxError => e
+          puts "ERROR: %s" % e
+          next
+        end
         break FAREWELL_MESSAGE if exp.nil?
 
         begin
