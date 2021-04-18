@@ -35,7 +35,7 @@ module Rus3
 
     # Hods major component names of the REPL.
     COMPONENTS = {
-      :parser => Parser::SchemeParser,
+      :parser => Parser::DEFAULT_PARSER,
       :evaluator => Evaluator,
       :printer => nil,
     }
@@ -56,6 +56,7 @@ module Rus3
       @prompt = PROMPT
       @parser.prompt = PROMPT unless @parser.nil?
 
+      define_constants
       define_help_feature
       define_history_feature
 
@@ -78,7 +79,7 @@ module Rus3
 
         @printer.print(value)              # PRINT
       }
-      puts "\n#{msg}" unless msg.nil?
+      puts "#{msg}" unless msg.nil?
     end
 
     # Shows the greeting message.
@@ -107,14 +108,24 @@ module Rus3
     end
 
     def print(obj)
-      Kernel.print "==> "
+      Kernel.print "==> [#{obj.class}]: "
       pp obj
     end
 
     private
 
+    def define_constants        # :nodoc:
+      return if @evaluator.nil?
+
+      r = @evaluator.binding.receiver
+
+      r.instance_eval {
+        self.class.const_set(:RUS3_VERSION, "#{VERSION}")
+      }
+    end
+
     def define_help_feature     # :nodoc:
-      return @evaluator.nil?
+      return if @evaluator.nil?
 
       r = @evaluator.binding.receiver
 
@@ -138,7 +149,7 @@ HELP
     end
 
     def define_history_feature  # :nodoc:
-      return @evaluator.nil?
+      return if @evaluator.nil?
 
       r = @evaluator.binding.receiver
 
