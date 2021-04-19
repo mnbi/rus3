@@ -48,8 +48,13 @@ module Rus3::Parser
     PURE_IMAG  = Regexp.new("\\A[+-](#{C_IMAG_PAT})?i\\Z")
 
     KEYWORDS = {
-      "IF" => :if,
+      "LAMBDA" => :lambda,
+      "IF"     => :if,
+      "SET!"   => :set!,
       "DEFINE" => :define,
+      "COND"   => :cond,
+      "LET"    => :let,
+      "ELSE"   => :else,        # may use with :cond
     }
 
     # :startdoc:
@@ -72,31 +77,31 @@ module Rus3::Parser
       def tokenize(exp)
         source = exp.gsub(/[()]/, S2R_MAP)
 
-        source.split(" ").map { |tk|
-          case tk
+        source.split(" ").map { |literal|
+          case literal
           when "["
-            Token.new(:lparen, tk)
+            Token.new(:lparen, literal)
           when "]"
-            Token.new(:rparen, tk)
+            Token.new(:rparen, literal)
           when BOOLEAN
-            Token.new(:boolean, tk)
+            Token.new(:boolean, literal)
           when IDENTIFIER
-            key = tk.upcase
+            key = literal.upcase
             if KEYWORDS.keys.include?(key)
-              Token.new(KEYWORDS[key], tk)
+              Token.new(KEYWORDS[key], literal)
             else
-              Token.new(:ident, tk)
+              Token.new(:ident, literal)
             end
           when STRING
-            Token.new(:string, tk)
+            Token.new(:string, literal)
           when "="
             Token.new(:op_proc, "==")
           when ARITHMETIC_OPS, COMPARISON_OPS
-            Token.new(:op_proc, tk)
+            Token.new(:op_proc, literal)
           when REAL_NUM, RATIONAL, COMPLEX, PURE_IMAG
-            Token.new(:number, tk)
+            Token.new(:number, literal)
           else
-            Token.new(:illegal, tk)
+            Token.new(:illegal, literal)
           end
         }
       end

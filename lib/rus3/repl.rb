@@ -59,6 +59,7 @@ module Rus3
       define_constants
       define_help_feature
       define_history_feature
+      define_load_feature
 
       greeting
     end
@@ -184,6 +185,24 @@ HELP
         end
         alias :_his :_history
 
+      }
+    end
+
+    def define_load_feature
+      return if @evaluator.nil?
+
+      r = @evaluator.binding.receiver
+
+      r.instance_variable_set(:@scm_parser, Parser::SchemeParser.new)
+      r.instance_eval {
+        def load_scm(path)
+          raise Rus3::CannotFindFileError, path unless FileTest.exist?(path)
+          scm_source = nil
+          File.open(path, "r") {|f| scm_source = f.readlines(chomp: true)}
+          s_exp = scm_source.join(" ")
+          r_exp = @scm_parser.parse(s_exp)
+          self.binding.eval(r_exp)
+        end
       }
     end
 

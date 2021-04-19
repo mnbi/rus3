@@ -26,9 +26,11 @@ module Rus3
 
     def initialize
       @env = Environment.new
+      define_procs_for_infix_ops
     end
 
     def eval(exp)
+      pp exp
       @env.binding.eval(exp)
     end
 
@@ -38,6 +40,28 @@ module Rus3
 
     def version
       "Evaluator version: #{VERSION}"
+    end
+
+    private
+
+    INFIX_OPS = {
+      :+  => :plus,
+      :-  => :minus,
+      :*  => :mul,
+      :/  => :div,
+      :%  => :mod,
+      :<  => :lt?,
+      :<= => :le?,
+      :>  => :gt?,
+      :>= => :ge?,
+      :== => :eqv?,
+    }
+
+    def define_procs_for_infix_ops
+      r = @env.binding.receiver
+      INFIX_OPS.each { |op, proc_name|
+        r.instance_eval("def #{proc_name}(op1, op2); op1 #{op} op2; end")
+      }
     end
 
   end

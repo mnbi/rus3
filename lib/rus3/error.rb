@@ -38,6 +38,7 @@ module Rus3
     :number_required => "number required: got=%s",
     :string_required => "string required: got=%s",
     :scheme_syntax_error => "syntax error as Scheme: got=%s",
+    :cannot_find_file => "cannot find %s",
   }
 
   # :startdoc:
@@ -100,6 +101,12 @@ module Rus3
   class SchemeSyntaxError < Error
     def initialize(obj)
       super(EMSG[:scheme_syntax_error] % smart_error_value(obj))
+    end
+  end
+
+  class CannotFindFileError < Error
+    def initialize(obj)
+      super(EMSG[:cannot_find_file] % smart_error_value(obj))
     end
   end
 
