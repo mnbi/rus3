@@ -3,8 +3,6 @@
 
 require "bundler/setup"
 
-# To run Rus3 in *debug mode*, pass any argument in the command line.
-RUS3_DEBUG = !ARGV.shift.nil?
 require "rus3"
 
 # You can add fixtures and/or initialization code here to make experimenting

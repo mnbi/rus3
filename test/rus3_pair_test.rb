@@ -3,6 +3,8 @@
 require "test_helper"
 
 class Rus3PairTest < Minitest::Test
+  include Rus3::EmptyList
+
   def test_it_can_be_instantiated_and_access_to_its_car_and_cdr
     p = Rus3::Pair.new(0, 1)
     refute_nil p
@@ -70,54 +72,9 @@ class Rus3PairTest < Minitest::Test
     assert_equal "(40)", p.to_s
   end
 
-  def test_a_list_can_be_constructed
-    lst = Rus3::Pair.list(100, 101, 102)
-    refute_nil(lst)
-    assert_equal 100, lst.car
-    assert_instance_of Rus3::Pair, lst.cdr
-    assert_equal 101, lst.cdr.car
-    assert_instance_of Rus3::Pair, lst.cdr.cdr
-    assert_equal 102, lst.cdr.cdr.car
-    assert empty_list?(lst.cdr.cdr.cdr)
-  end
-
-  def test_a_list_is_enumerable_each
-    ary = [110, 111, 112, 113]
-    lst = Rus3::Pair.list(*ary)
-    i = 0
-    lst.each { |e|
-      assert_equal ary[i], e
-      i += 1
-    }
-  end
-
-  def test_map_constructs_a_list
-    ary = [120, 121, 122, 123, 124]
-    lst = Rus3::Pair.list(*ary)
-    result = lst.map{ |e| e*2 }
-    assert_instance_of Rus3::Pair, result
-    i = 0
-    cp = result
-    until empty_list?(cp)
-      assert_equal ary[i]*2, cp.car
-      i += 1
-      cp = cp.cdr
-    end
-  end
-
-  def test_map_array_construct_an_arry
-    ary = [130, 131, 132, 133, 134, 135]
-    lst = Rus3::Pair.list(*ary)
-    result = lst.map_array{ |e| e*3 }
-    assert_instance_of Array, result
-    result.each_with_index { |e, i|
-      assert_equal ary[i]*3, e
-    }
-  end
-
   private
 
   def empty_list?(obj)
-    Rus3::EmptyList::EMPTY_LIST == obj
+    null?(obj)
   end
 end

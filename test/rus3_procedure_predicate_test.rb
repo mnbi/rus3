@@ -8,7 +8,7 @@ class Rus3ProcedurePredicateTest < Minitest::Test
   # list?
 
   def test_list_predicate_succeeds_against_a_proper_list
-    lst = Rus3::Pair.list(1, 2, 3)
+    lst = Array[1, 2, 3]
     assert list?(lst)
   end
 
@@ -19,14 +19,12 @@ class Rus3ProcedurePredicateTest < Minitest::Test
       cp = cp.cdr
     }
     cp.set_cdr!(5)
-#    puts p.to_s
 
     refute list?(p)
   end
 
   def test_list_predicate_fails_other_than_a_list
     prepare_values_except(:list).each { |value|
-#      p valie
       refute list?(value)
     }
   end
@@ -264,19 +262,22 @@ class Rus3ProcedurePredicateTest < Minitest::Test
   private
 
   VALUES = {
-    :boolean => false,
-    :pair => Rus3::Pair.new(1, 2),
-    :symbol => :foo,
-    :number => Math::PI,
-#    :char => :not_ready,
-    :string => "hoge",
-    :vector => [100, 101, 102],
-#    :port => :not_ready,
+    :boolean   => false,
+    :pair      => Rus3::Pair.new(1, 2),
+    :symbol    => :foo,
+    :number    => Math::PI,
+    :char      => :not_ready,
+    :string    => "hoge",
+    :vector    => :not_ready,
+    :port      => :not_ready,
     :procedure => lambda{ |x| x * x },
   }
 
   def prepare_values_except(*except_types)
-    VALUES.map{ |key, value| value unless except_types.include?(key) }
+    VALUES.map{ |key, value|
+      next if value == :not_ready
+      value unless except_types.include?(key)
+    }
   end
 
 end

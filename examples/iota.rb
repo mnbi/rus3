@@ -1,13 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-RUS3_DEBUG = !ARGV.shift.nil?
 require "rus3"
 include Rus3
-
-if Rus3.debug_mode?
-  pp self.class.included_modules
-end
 
 # (define (iota count start step)
 #   (if (zero? count)

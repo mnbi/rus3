@@ -20,7 +20,7 @@ class Rus3ProcedureListTest < Minitest::Test
   end
 
   def test_car_raises_an_error_against_non_pair
-    assert_raises(Rus3::PairRequiredError) {
+    assert_raises(Rus3::PairOrListRequiredError) {
       car(5)
     }
   end
@@ -33,7 +33,7 @@ class Rus3ProcedureListTest < Minitest::Test
   end
 
   def test_cdr_raises_an_error_against_non_pair
-    assert_raises(Rus3::PairRequiredError) {
+    assert_raises(Rus3::PairOrListRequiredError) {
       cdr(6)
     }
   end
@@ -43,11 +43,11 @@ class Rus3ProcedureListTest < Minitest::Test
   def test_set_car_replaces_car_part_of_given_pair
     p = cons(7, 8)
     set_car!(p, 9)
-    assert_equal 9, p.car
+    assert_equal 9, car(p)
   end
 
   def test_set_car_raises_an_error_against_non_pair
-    assert_raises(Rus3::PairRequiredError) {
+    assert_raises(Rus3::PairOrListRequiredError) {
       set_car!(13, 14)
     }
   end
@@ -57,11 +57,11 @@ class Rus3ProcedureListTest < Minitest::Test
   def test_set_cdr_replaces_cdr_part_of_given_pair
     p = cons(10, 11)
     set_cdr!(p, 12)
-    assert_equal 12, p.cdr
+    assert_equal 12, cdr(p)
   end
 
   def test_set_cdr_raises_an_error_against_non_pair
-    assert_raises(Rus3::PairRequiredError) {
+    assert_raises(Rus3::PairOrListRequiredError) {
       set_cdr!(15, 16)
     }
   end
@@ -91,8 +91,8 @@ class Rus3ProcedureListTest < Minitest::Test
     lst = list(*ary)
     p = lst
     ary.each { |e|
-      assert_equal e, p.car
-      p = p.cdr
+      assert_equal e, car(p)
+      p = cdr(p)
     }
   end
 
@@ -122,26 +122,26 @@ class Rus3ProcedureListTest < Minitest::Test
 
   def test_append_constructs_a_list_from_2_lists
     ary = (300...300+10).to_a
-    l1 = Rus3::Pair.list(*ary[0..4])
-    l2 = Rus3::Pair.list(*ary[5..-1])
+    l1 = list(*ary[0..4])
+    l2 = list(*ary[5..-1])
     result = append(l1, l2)
     p = result
     ary.each { |e|
-      assert_equal e, p.car
-      p = p.cdr
+      assert_equal e, car(p)
+      p = cdr(p)
     }
   end
 
   def test_append_constructs_a_list_from_3_lists
     ary = (310...310+15).to_a
-    l1 = Rus3::Pair.list(*ary[0..2])
-    l2 = Rus3::Pair.list(*ary[3..9])
-    l3 = Rus3::Pair.list(*ary[10..-1])
+    l1 = list(*ary[0..2])
+    l2 = list(*ary[3..9])
+    l3 = list(*ary[10..-1])
     result = append(l1, l2, l3)
     p = result
     ary.each { |e|
-      assert_equal e, p.car
-      p = p.cdr
+      assert_equal e, car(p)
+      p = cdr(p)
     }
   end
 
@@ -160,14 +160,14 @@ class Rus3ProcedureListTest < Minitest::Test
 
   def test_reverse_make_a_list_in_reverse_ordeer
     ary = (400...400+20).to_a
-    lst = Rus3::Pair.list(*ary)
+    lst = list(*ary)
     result = reverse(lst)
     refute lst.equal?(result)   # make sure 2 lists are different object
 
     p = result
     ary.reverse.each { |e|
-      assert_equal e, p.car
-      p = p.cdr
+      assert_equal e, car(p)
+      p = cdr(p)
     }
   end
 
@@ -183,9 +183,9 @@ class Rus3ProcedureListTest < Minitest::Test
     p = lst
     q = result
     until null?(p)
-      assert_equal q.car, p.car
-      p = p.cdr
-      q = q.cdr
+      assert_equal car(p), car(q)
+      p = cdr(p)
+      q = cdr(q)
     end
   end
 
@@ -204,21 +204,15 @@ class Rus3ProcedureListTest < Minitest::Test
   end
 
   def test_list_tail_returns_a_sublist
-    lst = prepare_list(530, 8)
+    ary = (530...530 + 8).to_a
+    lst = list(*ary)
     k = 4
     result = list_tail(lst, k)
-    p = lst
-    while k > 0
-      p = p.cdr
-      k -= 1
-    end
+    p = result
 
-    q = result
     until null?(p)
-      # since `list_tail` does not instantiate any new Pair.
-      assert p.equal?(q)
-      p = p.cdr
-      q = q.cdr
+      assert ary[k], car(p)
+      p = cdr(p)
     end
   end
 
@@ -229,8 +223,8 @@ class Rus3ProcedureListTest < Minitest::Test
     lst = prepare_list(540, size)
     p = lst
     0.upto(size - 1) { |i|
-      assert_equal p.car, list_ref(lst, i)
-      p = p.cdr
+      assert_equal car(p), list_ref(lst, i)
+      p = cdr(p)
     }
   end
 
@@ -249,7 +243,7 @@ class Rus3ProcedureListTest < Minitest::Test
   end
 
   def prepare_list(initial, size)
-    Rus3::Pair.list(*(initial...initial+size).to_a)
+    (initial...initial+size).to_a
   end
 
 end
