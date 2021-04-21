@@ -12,7 +12,11 @@ module Rus3
     include EmptyList
 
     class Environment
-      include Rus3
+      include Rus3::Procedure::Control
+      include Rus3::Procedure::Write
+      include Rus3::Procedure::List
+      include Rus3::Procedure::Predicate
+      include Rus3::EmptyList
 
       attr_reader :binding
 
@@ -22,15 +26,18 @@ module Rus3
 
     end
 
+    attr_accessor :verbose
+
     attr_reader :environment
 
     def initialize
+      @verbose = false
       @env = Environment.new
       define_procs_for_infix_ops
     end
 
     def eval(exp)
-      pp exp
+      pp exp if @verbose
       @env.binding.eval(exp)
     end
 
@@ -45,8 +52,8 @@ module Rus3
     private
 
     INFIX_OPS = {
-      :+  => :plus,
-      :-  => :minus,
+      :+  => :add,
+      :-  => :subtract,
       :*  => :mul,
       :/  => :div,
       :%  => :mod,

@@ -9,6 +9,12 @@ module Rus3
     class Printer
       include Rus3::Procedure::Write
 
+      attr_accessor :verbose
+
+      def initialize
+        @verbose = false
+      end
+
       def print(obj)
         display(obj)
       end

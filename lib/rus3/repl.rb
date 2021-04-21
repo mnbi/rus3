@@ -26,8 +26,8 @@ module Rus3
     class << self
 
       # Starts REPL.
-      def start
-        repl = Repl.new
+      def start(verbose: false)
+        repl = Repl.new(verbose: verbose)
         repl.loop
       end
 
@@ -48,13 +48,19 @@ module Rus3
 
     @@value_history = []        # :nodoc:
 
-    def initialize
+    attr_accessor :verbose      # :nodoc:
+
+    def initialize(verbose: false)
       COMPONENTS.each { |name, klass|
         instance_variable_set("@#{name}", klass.nil? ? self : klass.new)
       }
 
       @prompt = PROMPT
       @parser.prompt = PROMPT unless @parser.nil?
+
+      @verbose = verbose
+      @evaluator.verbose = verbose
+      @printer.verbose = verbose
 
       define_constants
       define_help_feature
@@ -114,7 +120,9 @@ module Rus3
     end
 
     def print(obj)
-      Kernel.print "==> [#{obj.class}]: "
+      prefix = "==> "
+      prefix += "[#{obj.class}]: " if @verbose
+      Kernel.print prefix
       pp obj
     end
 

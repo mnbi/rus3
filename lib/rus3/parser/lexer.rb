@@ -28,8 +28,15 @@ module Rus3::Parser
     ]
 
     BOOLEAN    = /\A#(f|t)\Z/
-    IDENTIFIER = /\A[a-zA-Z_][\w?!]*\Z/
     STRING     = /\A\"[^\"]*\"\Z/
+
+    # idents
+    EXTENDED   = "\\-"
+    IDENT_PAT  = "[a-zA-Z_][\\w?!#{EXTENDED}]*"
+    IDENTIFIER = Regexp.new("\\A#{IDENT_PAT}\\Z")
+
+    EXTENDED_REGEXP = Regexp.new("[#{EXTENDED}]")
+    EXTENDED_MAP = { "-" => "_", }
 
     # operators
     ARITHMETIC_OPS = /\A[+\-*\/%]\Z/
@@ -90,7 +97,7 @@ module Rus3::Parser
             if KEYWORDS.keys.include?(key)
               Token.new(KEYWORDS[key], literal)
             else
-              Token.new(:ident, literal)
+              Token.new(:ident, literal.gsub(EXTENDED_REGEXP, EXTENDED_MAP))
             end
           when STRING
             Token.new(:string, literal)

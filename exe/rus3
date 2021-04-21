@@ -2,4 +2,4 @@
 
 require "rus3"
 
-Rus3::Repl.start
+Rus3::Repl.start(verbose: ARGV.size > 0)

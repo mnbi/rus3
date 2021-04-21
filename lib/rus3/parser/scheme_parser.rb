@@ -39,6 +39,9 @@ module Rus3::Parser
     # Supported S-expression type:
     #
     #   - primitive expression (s_exp -> r_exp)
+    #     - empty list
+    #       - "()" -> "[]"
+    #
     #     - variable reference
     #       - identifier (symbol) -> "foo"
     #
@@ -49,27 +52,27 @@ module Rus3::Parser
     #
     #     - procedure call (s_exp -> i_exp -> r_exp)
     #       - (+ (* 3 4) (/ 5 6)) ... s_exp
-    #         -> ["plus", ["multiply", "3", "4"],
-    #             ["divide", "5", "6"]] ... i_exp
-    #         -> "plus(multiply(3, 4), divide(5, 6))"" ... r_exp
+    #         -> ["add", ["mult", "3", "4"],
+    #             ["div", "5", "6"]] ... i_exp
+    #         -> "add(mul(3, 4), div(5, 6))" ... r_exp
     #
     #       - ((lambda (x) (+ x x)) 4) ... s_exp
-    #         -> [["lambda", ["x"], ["plus", "x", "x"]], 4] ... i_exp
-    #         -> "lambda { |x| plus(x, x) }.call(4)" ... r_exp
+    #         -> [["lambda", ["x"], ["add", "x", "x"]], 4] ... i_exp
+    #         -> "lambda { |x| add(x, x) }.call(4)" ... r_exp
     #
     #     - procedure (s_exp -> i_exp -> r_exp)
     #       - (lambda (x) (+ x x)) ... s_exp
-    #         -> ["lambda", ["x"], ["plus", "x", "x"]] ... i_exp
-    #         -> "lambda { |x| plus(x, x) }" ... r_exp
+    #         -> ["lambda", ["x"], ["add", "x", "x"]] ... i_exp
+    #         -> "lambda { |x| add(x, x) }" ... r_exp
     #
     #     - conditionals (s_exp -> i_exp -> r_exp)
     #       - (if (= n 0) 1 (* n (- n 1))) ... s_exp
     #         -> ["if", ["eqv?", "n", "0"],
-    #             "1" ["multiply", "n", ["minus", "n", "1"]]] ... i_exp
-    #         -> "if eqv?(n, 0)\n
-    #               1\n
-    #             else\n
-    #               multiply(n, minus(n, 1))\n
+    #             "1" ["mul", "n", ["subtract", "n", "1"]]] ... i_exp
+    #         -> "if eqv?(n, 0);
+    #               1;
+    #             else;
+    #               mul(n, subtract(n, 1));
     #             end" ... r_exp
     #
     #     - assignment (s_exp -> i_exp -> r_exp)
@@ -81,12 +84,12 @@ module Rus3::Parser
     #       - (define (fact n) (if (= n 0) 1 (* n (fact (- n 1))))) ... s_exp
     #         -> ["define", ["fact", "n"],
     #              ["if", ["eqv?", "n", "0"], "1",
-    #              ["multiply", "n", ["fact", ["minus", "n", "1"]]]]] ... i_exp
-    #         -> "def fact(n)\n
-    #                if n == 0\n
-    #                  1\n
-    #                else\n
-    #                  n * fact((n - 1))\n
+    #              ["mul", "n", ["fact", ["subtract", "n", "1"]]]]] ... i_exp
+    #         -> "def fact(n);
+    #                if n == 0;
+    #                  1;
+    #                else;
+    #                  n * fact((n - 1));
     #             end" ... r_exp
     #
     #   - derived expression
@@ -97,20 +100,20 @@ module Rus3::Parser
     #         -> ["cond", [[["gt?", "3", "2"], "\"greater\""],
     #                     [["lt?", "3", "2"], "\"less\""],
     #                     ["else", "\"equal\""]]] ... i_exp
-    #         -> "if gt(3,2)\n
-    #               'greater'\n
-    #             elsif lt(3,2)\n
-    #               'less'\n
-    #             else\n
-    #               'equal'
+    #         -> "if gt?(3,2);
+    #               'greater';
+    #             elsif lt?(3,2);
+    #               'less';
+    #             else;
+    #               'equal';
     #             end" ... r_exp
     #
     #     - building construct (s_exp -> i_exp -> r_exp)
     #       - (let ((x 2) (y 3))
     #              (* x y)) ... s_exp
     #         -> ["let", [["x", "2"], ["y", "3"]],
-    #              ["multiply", "x", "y"]] ... i_exp
-    #         -> "lambda { |x, y| multiply(x, y) }.call(2, 3)" ... r_exp
+    #              ["mul", "x", "y"]] ... i_exp
+    #         -> "lambda { |x, y| mul(x, y) }.call(2, 3)" ... r_exp
     #
     #  - list (s_exp -> r_exp)
     #    - (1 2 3 (4 5) (6 7 8) 9 0)
@@ -121,15 +124,17 @@ module Rus3::Parser
     end
 
     def parse_tokens(lexer)     # :nodoc:
-      r_exp = nil
-      token = lexer.next
-      if token.type == :lparen
-        i_exp = parse_compound(lexer)
-        r_exp = translate(i_exp)
-      else
-        r_exp = parse_primitive(token)
-      end
-      r_exp
+      r_exps = []
+      loop {
+        token = lexer.next
+        if token.type == :lparen
+          i_exp = parse_compound(lexer)
+          r_exps << translate(i_exp)
+        else
+          r_exps << parse_primitive(token)
+        end
+      }
+      r_exps.join("\n")
     end
 
     def parse_primitive(token)
@@ -183,8 +188,8 @@ module Rus3::Parser
     end
 
     OP_PROCS = {
-      "+"  => "plus",
-      "-"  => "minus",
+      "+"  => "add",
+      "-"  => "subtract",
       "*"  => "mul",
       "/"  => "div",
       "%"  => "mod",
@@ -203,6 +208,8 @@ module Rus3::Parser
       r_exp = nil
 
       if i_exp.instance_of?(Array)
+        return "[]" if i_exp.empty? # an empty list
+
         case i_exp[0]
         when "lambda", "if", "set!", "define", "cond", "let"
           keyword = i_exp[0]
@@ -233,10 +240,10 @@ module Rus3::Parser
 
     def translate_lambda(i_exp)
       formals = i_exp[1]
-      body = i_exp[2]
+      body = i_exp[2..-1]
 
       if body.instance_of?(Array)
-        body = translate(body)
+        body = translate_body(body)
       end
 
       "lambda {|#{formals.join(', ')}| #{body}}"
@@ -264,7 +271,7 @@ module Rus3::Parser
       if i_exp[1].instance_of?(Array)
         name = i_exp[1][0]
         params = i_exp[1][1..-1]
-        body = translate(i_exp[2])
+        body = translate_body(i_exp[2..-1])
 
         "def #{name}(#{params.join(', ')}); #{body}; end"
       else
@@ -300,7 +307,15 @@ module Rus3::Parser
       params = bindings.keys.join(", ")
       args = bindings.values.map{|e| translate(e)}.join(", ")
 
-      "lambda{|#{params}| #{body}}.call(#{args})"
+      "lambda {|#{params}| #{body}}.call(#{args})"
+    end
+
+    def translate_body(i_exps)
+      r_exps = []
+      i_exps.map { |i_exp|
+        r_exps << translate(i_exp)
+      }
+      r_exps.join(";")
     end
 
   end
