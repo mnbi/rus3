@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "Ruby with Syntax Sugar of Scheme"
   spec.description   = "Ruby with Syntax Sugar of Scheme"
   spec.homepage      = "https://github.com/mnbi/rus3"
+  spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
 
   spec.metadata["homepage_uri"] = spec.homepage
