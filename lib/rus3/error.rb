@@ -11,12 +11,14 @@ module Rus3
           "()"
         else                    # a normal proper list
           list_notation = obj.to_s().gsub(/[\[\],]/, A2L_MAP)
-          "list( %s )" % obj
+          "list( %s )" % list_notation
         end
       when Numeric
         "number(%d)" % obj
       when Rus3::Pair
         "pair(%s)" % obj
+      when Rus3::Vector
+        "vector(%s)" % obj
       else
         "%s(%s)" % [obj.class, obj]
       end
@@ -31,7 +33,9 @@ module Rus3
     :pair_required => "pair required: got=%s",
     :list_required => "proper list required: got=%s",
     :pair_or_list_required => "pair or proper list required: got=%s",
+    :vector_required => "vector required: got=%s",
     :out_of_range  => "argument out of range: got=%s",
+    :exceed_upper_limit => "argument exceeds its upper limit (%d): got=%d",
     :unsupported_method => "specified method does not work now.",
     :wrong_type => "wrong type argument: got=%s, wants=%s",
     :integer_required => "integer required: got=%s",
@@ -63,9 +67,21 @@ module Rus3
     end
   end
 
+  class VectorRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:vector_required] % smart_error_value(obj))
+    end
+  end
+
   class OutOfRangeError < Error
     def initialize(obj)
       super(EMSG[:out_of_range] % smart_error_value(obj))
+    end
+  end
+
+  class ExceedUpperLimitError < Error
+    def initialize(value, limit)
+      super(EMSG[:exceed_upper_limit] % [limit, value])
     end
   end
 

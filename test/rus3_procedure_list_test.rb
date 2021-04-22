@@ -198,7 +198,7 @@ class Rus3ProcedureListTest < Minitest::Test
   def test_list_tail_raises_an_error_when_2nd_argument_is_greather_than_length
     size = 7
     lst = prepare_list(520, size)
-    assert_raises(Rus3::OutOfRangeError) {
+    assert_raises(Rus3::ExceedUpperLimitError) {
       list_tail(lst, size + 1)
     }
   end
@@ -231,7 +231,7 @@ class Rus3ProcedureListTest < Minitest::Test
   def test_list_ref_raises_when_specified_larger_than_length_of_the_list
     size = 10
     lst = prepare_list(550, size)
-    assert_raises(Rus3::OutOfRangeError) {
+    assert_raises(Rus3::ExceedUpperLimitError) {
       list_ref(lst, size + 1)
     }
   end

@@ -92,6 +92,16 @@ class Rus3ParserLexerTest < Minitest::Test
     assert_equal "]", token.literal
   end
 
+  # vector litral
+
+  def test_it_can_detect_vector_lpraen
+    l = Rus3::Parser::Lexer.new("#(")
+    token = l.next
+
+    assert_equal :vec_lparen, token.type
+    assert_equal "#[", token.literal
+  end
+
   # compound test
 
   def test_it_can_detect_tokens_properly

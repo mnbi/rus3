@@ -97,7 +97,9 @@ module Rus3
     # Shows the greeting message.
     def greeting
       puts "A simple REPL for Rus3:"
-      puts "- Rus3 version: #{Rus3::VERSION}"
+      puts "- Rus3 version: #{Rus3::VERSION} (#{Rus3::RELEASE})"
+      return unless @verbose
+
       puts "  - REPL version: #{VERSION}"
       COMPONENTS.keys.each { |comp_name|
         Kernel.print "    - "

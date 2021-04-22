@@ -5,7 +5,7 @@ module Rus3::Parser
   class Lexer < Enumerator
 
     # Indicates the version of the lexer class
-    LEXER_VERSION = "0.1.0"
+    LEXER_VERSION = "0.1.1"
 
     # :stopdoc:
 
@@ -13,6 +13,7 @@ module Rus3::Parser
       # delimiters
       :lparen,
       :rparen,
+      :vec_lparen,
       # value types
       :boolean,
       :ident,
@@ -31,12 +32,12 @@ module Rus3::Parser
     STRING     = /\A\"[^\"]*\"\Z/
 
     # idents
-    EXTENDED   = "\\-"
+    EXTENDED   = "\\->"
     IDENT_PAT  = "[a-zA-Z_][\\w?!#{EXTENDED}]*"
     IDENTIFIER = Regexp.new("\\A#{IDENT_PAT}\\Z")
 
     EXTENDED_REGEXP = Regexp.new("[#{EXTENDED}]")
-    EXTENDED_MAP = { "-" => "_", }
+    EXTENDED_MAP = { "-" => "_", ">" => "to_"}
 
     # operators
     ARITHMETIC_OPS = /\A[+\-*\/%]\Z/
@@ -90,6 +91,8 @@ module Rus3::Parser
             Token.new(:lparen, literal)
           when "]"
             Token.new(:rparen, literal)
+          when "#["
+            Token.new(:vec_lparen, literal)
           when BOOLEAN
             Token.new(:boolean, literal)
           when IDENTIFIER
