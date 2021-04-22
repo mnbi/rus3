@@ -44,12 +44,12 @@ module Rus3::Procedure
     # provides some classes for the rest of them.
     #
     #   boolean? ---> FalseClass or TrueClass
-    #   pair? ------> Rus3::Pair
+    #   pair? ------> Array (as a list) or Rus3::Pair (as a dotted pair)
     #   symbol? ----> Symbol
     #   number? ----> Numeric
     #   char? ------> Rus3::Char
     #   string? ----> String
-    #   vector? ----> Array
+    #   vector? ----> Rus3::Vector
     #   port? ------> Rus3::Port
     #   procedure? -> Proc
 
@@ -64,11 +64,11 @@ module Rus3::Procedure
     end
 
     def symbol?(obj)
-      obj.is_a?(Symbol) && obj != Rus3::UNDEF
+      obj.instance_of?(Symbol) && obj != Rus3::UNDEF
     end
 
     def number?(obj)
-      obj.is_a?(Numeric)
+      obj.kind_of?(Numeric)
     end
 
     def char?(obj)
@@ -79,8 +79,9 @@ module Rus3::Procedure
       obj.kind_of?(String)
     end
 
+    # procedure (R5RS/R7RS): (vector? obj)
     def vector?(obj)
-      false
+      obj.instance_of?(Rus3::Vector)
     end
 
     def port?(obj)

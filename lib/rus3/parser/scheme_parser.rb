@@ -6,7 +6,7 @@ module Rus3::Parser
   class SchemeParser < Parser
 
     # Indicates the version of the parser class
-    PARSER_VERSION = "0.1.0"
+    PARSER_VERSION = "0.1.1"
 
     # Constructs the version string.
 
@@ -115,6 +115,10 @@ module Rus3::Parser
     #              ["mul", "x", "y"]] ... i_exp
     #         -> "lambda { |x, y| mul(x, y) }.call(2, 3)" ... r_exp
     #
+    #  - vector (s_exp -> r_exp)
+    #    - #(1 2 #(3 4) 5)
+    #      -> "vector(1, 2, vector(3, 4), 5)"
+    #
     #  - list (s_exp -> r_exp)
     #    - (1 2 3 (4 5) (6 7 8) 9 0)
     #      -> "[1, 2, 3, [4, 5], [6, 7, 8], 9, 0]"
@@ -125,16 +129,23 @@ module Rus3::Parser
 
     def parse_tokens(lexer)     # :nodoc:
       r_exps = []
-      loop {
-        token = lexer.next
-        if token.type == :lparen
-          i_exp = parse_compound(lexer)
-          r_exps << translate(i_exp)
-        else
-          r_exps << parse_primitive(token)
-        end
-      }
+      loop { r_exps << parse_s_exp(lexer) }
       r_exps.join("\n")
+    end
+
+    def parse_s_exp(lexer)
+      r_exp = nil
+      token = lexer.next
+      case token.type
+      when :lparen
+        i_exp = parse_compound(lexer)
+        r_exp = translate(i_exp)
+      when :vec_lparen
+        r_exp = parse_vector(lexer)
+      else
+        r_exp = parse_primitive(token)
+      end
+      r_exp
     end
 
     def parse_primitive(token)
@@ -150,6 +161,30 @@ module Rus3::Parser
       else
         raise Rus3::SchemeSyntaxError, token.literal
       end
+      r_exp
+    end
+
+    def parse_vector(lexer)
+      r_exp = "vector("
+      Kernel.loop {
+        token = lexer.peek
+        case token.type
+        when :lparen
+          lexer.next
+          i_exp = parse_compound(lexer)
+          r_exp += translate(i_exp)
+        when :vec_lparen
+          lexer.next
+          r_exp += parse_vector(lexer)
+        when :rparen
+          lexer.next
+          r_exp = r_exp.sub(/,\s*\Z/, "") + ")"
+          break
+        else
+          r_exp += parse_s_exp(lexer)
+        end
+        r_exp += ", "
+      }
       r_exp
     end
 

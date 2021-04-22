@@ -52,6 +52,8 @@ Rus3(scheme)> 1/9
 ==> (1/9)
 Rus3(scheme)> 3+4i
 ==> (3+4i)
+Rus3(scheme)> #(1 2 3)
+==> #<Rus3::Vector:0x00007facf12d9fb0 @content=[1, 2, 3]>
 ```
 
 ### Procedure call
@@ -115,8 +117,8 @@ Following procedures described in the spec is available.
 - Predicates:
   - null?, list?
   - eqv?, eq?
-  - boolean?, pair?, symbol?, number?, string?
-    - char?, vector?, and port? are defined but it always returns `false`.
+  - boolean?, pair?, symbol?, number?, string?, vector?
+    - char? and port? are defined but it always returns `false`.
   - complex?, real?, rational?, integer?
   - zero?, positive?, negative?, odd?, even?
   - string-eq?, string-ci-eq?, string-lt?, string-gt?, string-le?,
@@ -127,6 +129,10 @@ Following procedures described in the spec is available.
 - List operations
   - cons, car, cdr, set-car!, set-cdr!, cxxr (caar and so on)
   - list, length, append, reverse, list-tail, list-ref
+
+- Vector operations
+  - make-vector, vector, vector-length, vector-ref, vector-set!,
+    vector->list, list->vector, vector-fill!
 
 - Write values
   - write

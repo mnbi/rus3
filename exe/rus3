@@ -2,4 +2,17 @@
 
 require "rus3"
 
-Rus3::Repl.start(verbose: ARGV.size > 0)
+opts = {}
+
+while ARGV.size > 0
+  arg = ARGV.shift
+  case arg
+  when "-d", "--debug"
+    opts[:debug] = true
+  when "-v", "--version"
+    puts "rus3 version #{Rus3::VERSION} (#{Rus3::RELEASE})"
+    exit 0
+  end
+end
+
+Rus3::Repl.start(verbose: opts[:debug])

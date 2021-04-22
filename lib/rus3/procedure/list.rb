@@ -11,12 +11,13 @@ module Rus3::Procedure
 
   module List
 
+    include Utils
     include Predicate
     include Rus3::EmptyList
 
     # Constructs a Pair object with arguments.
     #
-    #   - R5RS procedure: (cons obj1 obj2)
+    #   - procedure (R5RS): (cons obj1 obj2)
 
     def cons(obj1, obj2)
       case obj2
@@ -36,7 +37,7 @@ module Rus3::Procedure
     # Returns the CAR part of the argument.  If the arguemnt is not
     # a pair, raises PairRequiredError.
     #
-    #   - R5RS procedure: (car pair)
+    #   - procedure (R5RS): (car pair)
 
     def car(pair)
       case pair
@@ -53,7 +54,7 @@ module Rus3::Procedure
     # Returns the CDR part of the argument.  If the arguemnt is not
     # a pair, raises PairRequiredError.
     #
-    #   - R5RS procedure: (cdr pair)
+    #   - procedure (R5RS): (cdr pair)
 
     def cdr(pair)
       case pair
@@ -70,7 +71,7 @@ module Rus3::Procedure
     # Replaces the CAR part with the 2nd argument and returns UNDEF.
     # If the 1st arguemnt is not a pair, raises PairRequiredError.
     #
-    #   - R5RS procedure: (set-car! pair obj)
+    #   - procedure (R5RS): (set-car! pair obj)
 
     def set_car!(pair, obj)
       case pair
@@ -87,7 +88,7 @@ module Rus3::Procedure
     # Replaces the CDR part with the 2nd argument and returns UNDEF.
     # If the 1st arguemnt is not a pair, raises PairRequiredError.
     #
-    #   - R5RS procedure: (set-cdr! pair obj)
+    #   - procedure (R5RS): (set-cdr! pair obj)
 
     def set_cdr!(pair, obj)
       case pair
@@ -113,8 +114,8 @@ module Rus3::Procedure
 
     # Retrieves the CAR part of the CAR part of the given pair.
     #
-    #   - R5RS library procedure: (caar pair)
-    #   - R7RS procedure: (caar pair)
+    #   - library procedure (R5RS): (caar pair)
+    #   - procedure (R7RS): (caar pair)
 
     def caar(pair)
       car(car(pair))
@@ -122,8 +123,8 @@ module Rus3::Procedure
 
     # Retrieves the CAR part of the CDR part of the given pair.
     #
-    #   - R5RS library procedure: (cadr pair)
-    #   - R7RS procedure: (cadr pair)
+    #   - library procedure (R5RS): (cadr pair)
+    #   - procedure (R7RS): (cadr pair)
 
     def cadr(pair)
       car(cdr(pair))
@@ -131,8 +132,8 @@ module Rus3::Procedure
 
     # Retrieves the CDR part of the CAR part of the given pair.
     #
-    #   - R5RS library procedure: (cdar pair)
-    #   - R7RS procedure: (cdar pair)
+    #   - library procedure (R5RS): (cdar pair)
+    #   - procedure (R7RS): (cdar pair)
 
     def cdar(pair)
       cdr(car(pair))
@@ -140,8 +141,8 @@ module Rus3::Procedure
 
     # Retrieves the CDR part of the CDR part of the given pair.
     #
-    #   - R5RS library procedure: (cddr pair)
-    #   - R7RS procedure: (cddr pair)
+    #   - libbrary procedure (R5RS): (cddr pair)
+    #   - procedure (R7RS): (cddr pair)
 
     def cddr(pair)
       cdr(cdr(pair))
@@ -149,15 +150,14 @@ module Rus3::Procedure
 
     # :stopdoc:
 
-    #    - R7RS: procedure: (make-list k)
-
-    #    - R7RS: procedure: (make-list k fill)
+    #    - procedure (R7RS): (make-list k)
+    #    - procedure (R7RS): (make-list k fill)
 
     # :startdoc:
 
     # Constructs a list from arguments in its order.
     #
-    #   - R5RS library procedure: (list obj ...)
+    #   - library procedure (R5RS): (list obj ...)
 
     def list(*objs)
       Array[*objs]
@@ -166,8 +166,8 @@ module Rus3::Procedure
     # Returns the length of the arguemnt.  If the argument is not a
     # proper list, raises ListRequiredError.
     #
-    #   - R5RS library procedure: (length list)
-    #   - R7RS procedure: (length list)
+    #   - library procedure (R5RS): (length list)
+    #   - procedure (R7RS): (length list)
 
     def length(lst)
       check_list(lst)
@@ -177,8 +177,8 @@ module Rus3::Procedure
     # Concatenates given lists into a single list.  Each argument
     # must be a proper list, otherwise raises ListRequiredError.
     #
-    #   - R5RS library procedure: (append list ...)
-    #   - R7RS procedure: (append list ...)
+    #   - library procedure (R5RS): (append list ...)
+    #   - procedure (R7RS): (append list ...)
 
     def append(*lists)
       lists.each { |lst|
@@ -189,8 +189,8 @@ module Rus3::Procedure
 
     # Returns a list of the same elements in reverse order.
     #
-    #   - R5RS library procedure: (reverse list)
-    #   - R7RS procedure: (reverse list)
+    #   - library procedure (R5RS): (reverse list)
+    #   - procedure (R7RS): (reverse list)
 
     def reverse(lst)
       check_list(lst)
@@ -199,12 +199,12 @@ module Rus3::Procedure
 
     # Returns the sublist of the arguemnt by omitting the first k
     # elements.  The 2nd argument, k must be in 0..length(lst),
-    # otherwise raises OutOfRangeError.
+    # otherwise raises ExceedUppeerLimitError.
     #
     # This implementation logic comes from R5RS 6.3.2.
     #
-    #   - R5RS library procedure: (list-tail list k)
-    #   - R7RS procedure: (list-tail list k)
+    #   - library procedure (R5RS): (list-tail list k)
+    #   - procedure (R7RS): (list-tail list k)
 
     def list_tail(lst, k)
       check_list(lst)
@@ -214,10 +214,10 @@ module Rus3::Procedure
     end
 
     # Returns kth element of the argument.  k must be less than the
-    # length of the list, otherwise, raises OutOfRangeError.
+    # length of the list, otherwise, raises ExceedUppeerLimitError.
     #
-    #   - R5RS library procedure: (list-ref list k)
-    #   - R7RS procedure: (list-ref list k)
+    #   - library procedure (R5RS): (list-ref list k)
+    #   - procedure (R7RS): (list-ref list k)
 
     def list_ref(lst, k)
       check_list(lst)
@@ -228,62 +228,45 @@ module Rus3::Procedure
 
     # :stopdoc:
 
-    #   - R7RS procedure: (list-set! list k obj)
+    #   - procedure (R7RS): (list-set! list k obj)
 
     # :startdoc:
 
     # :stopdpc:
 
-    #   - R5RS library procedure: (memq obj list)
-    #   - R7RS procedure: (memq obj list)
+    #   - library procedure (R5RS): (memq obj list)
+    #   - procedure (R7RS): (memq obj list)
 
-    #   - R5RS library procedure: (memv obj list)
-    #   - R7RS procedure: (memv obj list)
+    #   - library procedure (R5RS): (memv obj list)
+    #   - procedure (R7RS): (memv obj list)
 
-    #   - R5RS library procedure: (member obj list)
-    #   - R7RS procedure: (member obj list)
+    #   - library procedure (R5RS): (member obj list)
+    #   - procedure (R7RS): (member obj list)
 
-    #   - R7RS procedure: (member obj list compare)
+    #   - procedure (R7RS): (member obj list compare)
 
     # :startdoc:
 
     # :stopdpc:
 
-    #   - R5RS library procedure: (assq obj alist)
-    #   - R7RS procedure: (assq obj alist)
+    #   - library procedure (R5RS): (assq obj alist)
+    #   - procedure (R7RS): (assq obj alist)
 
-    #   - R5RS library procedure: (assv obj alist)
-    #   - R7RS procedure: (assv obj alist)
+    #   - library procedure (R5RS): (assv obj alist)
+    #   - procedure (R7RS): (assv obj alist)
 
-    #   - R5RS library procedure: (assoc obj alist)
-    #   - R7RS procedure: (assoc obj alist)
+    #   - library procedure (R5RS): (assoc obj alist)
+    #   - procedure (R7RS): (assoc obj alist)
 
-    #   - R7RS procedure: (assoc obj alist compare)
+    #   - procedure (R7RS): (assoc obj alist compare)
 
     # :startdoc:
 
     # :stopdoc:
 
-    #   - R7RS procedure: (list-copy obj)
+    #   - procedure (R7RS): (list-copy obj)
 
     # :startdoc:
-
-    private
-
-    def check_pair(pair)      # :nodoc:
-      if !pair.instance_of?(Rus3::Pair) and !pair.instance_of?(Array)
-        raise Rus3::PairRequiredError, pair
-      end
-    end
-
-    def check_list(lst)       # :nodoc:
-      raise Rus3::ListRequiredError, lst unless list?(lst)
-    end
-
-    # To make sure the number is less than its upper limit.
-    def check_upper_limit(k, limit) # :nodoc:
-      raise Rus3::OutOfRangeError, k if k >= limit
-    end
 
   end
 end
