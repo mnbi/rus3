@@ -28,6 +28,13 @@ class Rus3ParserLexerTest < Minitest::Test
     refute_token_type(tcs, :ident)
   end
 
+  # char
+
+  def test_it_can_detect_char
+    tcs = ["#\\a", "#\\space", "#\\newline"]
+    assert_token_type(tcs, :char)
+  end
+
   # string
 
   def test_it_can_detect_a_string

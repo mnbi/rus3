@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 - (nothing to record)
 
+## [0.1.2] - 2021-04-23
+### Added
+- Add `char`:
+  - add Rus3::Char class,
+  - modify Rus3::Parser::Lexer to accept a character literal,
+  - modify Rus3::Parser::SchemeParser to parse and translate a
+    character literal,
+- Add new error classes (CharRequiredError),
+- Add tests around `char`.
+
 ## [0.1.1] - 2021-04-22
 ### Added
 - Add `vector`:

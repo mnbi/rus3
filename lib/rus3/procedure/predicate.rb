@@ -72,7 +72,7 @@ module Rus3::Procedure
     end
 
     def char?(obj)
-      false
+      obj.instance_of?(Rus3::Char)
     end
 
     def string?(obj)
@@ -163,69 +163,67 @@ module Rus3::Procedure
     # :stopdoc:
 
     # Characters:
-    #
-    # ...
 
     # :startdoc:
 
     def char_eq?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :==)
     end
 
     def char_lt?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :<)
     end
 
     def char_gt?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :>)
     end
 
     def char_le?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :<=)
     end
 
     def char_ge?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :>=)
     end
 
     def char_ci_eq?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :==, ignore_case: true)
     end
 
     def char_ci_lt?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :<, ignore_case: true)
     end
 
     def char_ci_gt?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :>, ignore_case: true)
     end
 
     def char_ci_le?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :<=, ignore_case: true)
     end
 
     def char_ci_ge?(char1, char2)
-      false
+      Rus3::Char.compare_chars(char1, char2, :>=, ignore_case: true)
     end
 
     def char_alphabetic?(char)
-      false
+      Rus3::Char.alphabetic?(char)
     end
 
     def char_numeric?(char)
-      false
+      Rus3::Char.numeric?(char)
     end
 
     def char_whitespace?(char)
-      false
+      Rus3::Char.whitespace?(char)
     end
 
     def char_upper_case?(letter)
-      false
+      Rus3::Char.upper_case?(letter)
     end
 
     def char_lower_case?(letter)
-      false
+      Rus3::Char.lower_case?(letter)
     end
 
     # :stopdoc:
