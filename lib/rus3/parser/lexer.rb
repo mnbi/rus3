@@ -33,12 +33,10 @@ module Rus3::Parser
     STRING     = /\A\"[^\"]*\"\Z/
 
     # idents
-    EXTENDED   = "\\->"
-    IDENT_PAT  = "[a-zA-Z_][\\w?!#{EXTENDED}]*"
+    EXTENDED_CHARS = "!\\$%&\\*\\+\\-\\./:<=>\\?@\\^_~"
+    EXTENDED_REGEXP = Regexp.new("[#{EXTENDED_CHARS}]")
+    IDENT_PAT  = "[a-zA-Z_][a-zA-Z0-9#{EXTENDED_CHARS}]*"
     IDENTIFIER = Regexp.new("\\A#{IDENT_PAT}\\Z")
-
-    EXTENDED_REGEXP = Regexp.new("[#{EXTENDED}]")
-    EXTENDED_MAP = { "-" => "_", ">" => "to_"}
 
     # operators
     ARITHMETIC_OPS = /\A[+\-*\/%]\Z/
@@ -65,7 +63,7 @@ module Rus3::Parser
     CHAR_PAT    = "(#{SINGLE_CHAR_PAT}|#{SPACE_PAT}|#{NEWLINE_PAT})"
     CHAR        = Regexp.new("\\A#{CHAR_PREFIX}#{CHAR_PAT}\\Z")
 
-    KEYWORDS = {
+    SCM_KEYWORDS = {
       "LAMBDA" => :lambda,
       "IF"     => :if,
       "SET!"   => :set!,
@@ -107,10 +105,10 @@ module Rus3::Parser
             Token.new(:boolean, literal)
           when IDENTIFIER
             key = literal.upcase
-            if KEYWORDS.keys.include?(key)
-              Token.new(KEYWORDS[key], literal)
+            if SCM_KEYWORDS.keys.include?(key)
+              Token.new(SCM_KEYWORDS[key], literal)
             else
-              Token.new(:ident, literal.gsub(EXTENDED_REGEXP, EXTENDED_MAP))
+              Token.new(:ident, replace_extended_char(literal))
             end
           when CHAR
             Token.new(:char, literal)
@@ -126,6 +124,48 @@ module Rus3::Parser
             Token.new(:illegal, literal)
           end
         }
+      end
+
+      COMPARISON_OPS_MAP = {
+        "="  => "eq",
+        "<"  => "lt",
+        ">"  => "gt",
+        "<=" => "le",
+        ">=" => "ge",
+      }
+
+      EXTENDED_CHARS_MAP = {
+        "!" => "!",             # no conversion
+        "$" => "$",             # no conversion
+        "%" => "%",             # no conversion
+        "&" => "&",             # no conversion
+        "*" => "*",             # no conversion
+        "+" => "+",             # no conversion
+        "-" => "_",
+        "." => ".",             # no conversion
+        "/" => "/",             # no conversion
+        ":" => ":",             # no conversion
+        "<" => "<",             # no conversion
+        "=" => "=",             # no conversion
+        ">" => "to_",
+        "?" => "?",             # no conversion
+        "@" => "@",             # no conversion
+        "^" => "^",             # no conversion
+        "_" => "_",             # no conversion
+        "~" => "~",             # no conversion
+      }
+
+      def replace_extended_char(literal)
+        result = literal
+
+        COMPARISON_OPS_MAP.each { |op, word|
+          comparison_regexp = Regexp.new("#{op}\\?\\Z")
+          if comparison_regexp === literal
+            result = literal.sub(comparison_regexp, "_#{word}?")
+          end
+        }
+
+        result.gsub(EXTENDED_REGEXP, EXTENDED_CHARS_MAP)
       end
 
     end

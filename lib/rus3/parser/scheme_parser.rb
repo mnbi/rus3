@@ -151,7 +151,7 @@ module Rus3::Parser
     def parse_primitive(token)
       r_exp = nil
       case token.type
-      when *Lexer::KEYWORDS.values
+      when *Lexer::SCM_KEYWORDS.values
         r_exp = translate_ident(token.literal)
       when :string
         r_exp = token.literal
@@ -203,6 +203,50 @@ module Rus3::Parser
       }
       i_exp
     end
+
+    RB_KEYWORDS = {
+      "BEGIN"    => nil,
+      "END"      => nil,
+      "alias"    => nil,
+      "and"      => nil,
+      "begin"    => nil,
+      "break"    => nil,
+      "case"     => nil,
+      "class"    => nil,
+      "def"      => nil,
+      "defined?" => nil,
+      "do"       => nil,
+      "else"     => nil,
+      "elsif"    => nil,
+      "end"      => nil,
+      "ensure"   => nil,
+      "false"    => nil,
+      "for"      => nil,
+      "if"       => nil,
+      "in"       => nil,
+      "module"   => nil,
+      "next"     => nil,
+      "nil"      => nil,
+      "not"      => nil,
+      "or"       => nil,
+      "redo"     => nil,
+      "rescue"   => nil,
+      "retry"    => nil,
+      "return"   => nil,
+      "self"     => nil,
+      "super"    => nil,
+      "then"     => nil,
+      "true"     => nil,
+      "undef"    => nil,
+      "unless"   => nil,
+      "until"    => nil,
+      "when"     => nil,
+      "while"    => nil,
+      "yield"    => nil,
+      "__LINE__" => nil,
+      "__FILE__" => nil,
+      "__ENCODING__" => nil,
+    }
 
     def translate_ident(s_exp_literal)
       "#{s_exp_literal}"
