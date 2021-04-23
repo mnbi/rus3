@@ -150,6 +150,29 @@ class Rus3ParserLexerTest < Minitest::Test
     }
   end
 
+  # replace extended characters
+
+  def test_it_can_convert_comparison_chars
+    test_cases = {
+      "char=?" => "char_eq?",
+      "char<?" => "char_lt?",
+      "char>?" => "char_gt?",
+      "char<=?" => "char_le?",
+      "char>=?" => "char_ge?",
+      "char-ci=?" => "char_ci_eq?",
+      "char-ci<?" => "char_ci_lt?",
+      "char-ci>?" => "char_ci_gt?",
+      "char-ci<=?" => "char_ci_le?",
+      "char-ci>=?" => "char_ci_ge?",
+    }
+    test_cases.each { |input, expected|
+      l = Rus3::Parser::Lexer.new(input)
+      token = l.next
+      assert_equal :ident, token.type
+      assert_equal expected, token.literal
+    }
+  end
+
   private
 
   def assert_token_type(test_cases, expected_type)

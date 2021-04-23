@@ -5,7 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
-- (nothing to record)
+- Add a mechanism to replace comparison operator characters in
+  identifiers.
+  - e.g. `char<?` -> `char_lt?`
 
 ## [0.1.2] - 2021-04-23
 ### Added
