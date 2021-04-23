@@ -26,6 +26,15 @@ class Rus3ParserSchemeParserTest < Minitest::Test
     assert_expected(expected)
   end
 
+  def test_it_can_translate_literal_char
+    expected = {
+      "#\\a" => "Char.new(\"a\")",
+      "#\\space" => "Char.new(\" \")",
+      "#\\newline" => "Char.new(\"\n\")",
+    }
+    assert_expected(expected)
+  end
+
   def test_it_can_translate_literal_string
     expected = { '"hoge"' => '"hoge"', '"りすぷ"' => '"りすぷ"', }
     assert_expected(expected)

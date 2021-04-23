@@ -220,7 +220,58 @@ class Rus3ProcedurePredicateTest < Minitest::Test
   end
 
   # character
-  # TODO: write tests when Char class was defined.
+
+  def test_char_succeeds_against_char
+    assert char?(Rus3::Char.new("%"))
+  end
+
+  def test_char_fails_other_than_char
+    prepare_values_except(:char).each { |value|
+      char?(value)
+    }
+  end
+
+  # character comparison
+
+  def test_char_comparison_work_fine
+    char1 = Rus3::Char.new("A")
+    char2 = Rus3::Char.new("a")
+
+    expected = {
+      eq: false, lt: true, gt: false, le: true, ge: false,
+      ci_eq: true, ci_lt: false, ci_gt: false, ci_le: true, ci_ge: true,
+    }
+
+    expected.each { |k, v|
+      method_symbol = "char_#{k}?".intern
+      m = method(method_symbol)
+      assert_equal v, m.call(char1, char2)
+    }
+  end
+
+  def test_char_detect_type_work_fine
+    true_cases = "k8\tLm".chars
+    false_cases = "&nopQ".chars
+
+    predicates = [
+      :char_alphabetic?,
+      :char_numeric?,
+      :char_whitespace?,
+      :char_upper_case?,
+      :char_lower_case?,
+    ]
+
+    0.upto(true_cases.size - 1).each { |i|
+      ch = Rus3::Char.new(true_cases[i])
+      assert method(predicates[i]).call(ch)
+    }
+
+    0.upto(false_cases.size - 1).each { |i|
+      ch = Rus3::Char.new(false_cases[i])
+      refute method(predicates[i]).call(ch)
+    }
+
+  end
 
   # string
 
@@ -266,7 +317,7 @@ class Rus3ProcedurePredicateTest < Minitest::Test
     :pair      => Rus3::Pair.new(1, 2),
     :symbol    => :foo,
     :number    => Math::PI,
-    :char      => :not_ready,
+    :char      => Rus3::Char.new("$"),
     :string    => "hoge",
     :vector    => :not_ready,
     :port      => :not_ready,

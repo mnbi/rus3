@@ -43,6 +43,7 @@ module Rus3
 
   require_relative "rus3/procedure/utils"
   require_relative "rus3/procedure/predicate"
+  require_relative "rus3/procedure/char"
   require_relative "rus3/procedure/list"
   require_relative "rus3/procedure/vector"
   require_relative "rus3/procedure/control"

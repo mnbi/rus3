@@ -30,24 +30,61 @@ module Rus3
   # :stopdoc:
 
   EMSG = {
+    :number_required => "number required: got=%s",
+    :integer_required => "integer required: got=%s",
+    :real_number_required => "real number required: got=%s",
+    :char_required => "char required: got=%s",
+    :string_required => "string required: got=%s",
+    :vector_required => "vector required: got=%s",
     :pair_required => "pair required: got=%s",
     :list_required => "proper list required: got=%s",
     :pair_or_list_required => "pair or proper list required: got=%s",
-    :vector_required => "vector required: got=%s",
     :out_of_range  => "argument out of range: got=%s",
     :exceed_upper_limit => "argument exceeds its upper limit (%d): got=%d",
-    :unsupported_method => "specified method does not work now.",
     :wrong_type => "wrong type argument: got=%s, wants=%s",
-    :integer_required => "integer required: got=%s",
-    :real_number_required => "real number required: got=%s",
-    :number_required => "number required: got=%s",
-    :string_required => "string required: got=%s",
     :scheme_syntax_error => "syntax error as Scheme: got=%s",
+    :unsupported_method => "specified method does not work now.",
+    :unsupported_feature => "specified feature (`%s`) does not support for %s",
     :cannot_find_file => "cannot find %s",
-    :unsupported_feature => "specified feature (`%s`) does not support for %s"
   }
 
   # :startdoc:
+
+  class NumberRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:number_required] % smart_error_value(obj))
+    end
+  end
+
+  class IntegerRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:integer_required] % smart_error_value(obj))
+    end
+  end
+
+  class RealNumberRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:real_number_required] % smart_error_value(obj))
+    end
+  end
+
+  class CharRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:char_required] % smart_error_value(obj))
+    end
+  end
+
+  class StringRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:string_required] % smart_error_value(obj))
+    end
+  end
+
+  class VectorRequiredError < Error
+    def initialize(obj)
+      super(EMSG[:vector_required] % smart_error_value(obj))
+    end
+  end
 
   class PairRequiredError < Error
     def initialize(obj)
@@ -67,12 +104,6 @@ module Rus3
     end
   end
 
-  class VectorRequiredError < Error
-    def initialize(obj)
-      super(EMSG[:vector_required] % smart_error_value(obj))
-    end
-  end
-
   class OutOfRangeError < Error
     def initialize(obj)
       super(EMSG[:out_of_range] % smart_error_value(obj))
@@ -85,40 +116,10 @@ module Rus3
     end
   end
 
-  class UnsupportedMethodError < Error
-    def initialize
-      super(EMSG[:unsupported_method])
-    end
-  end
-
   class WrongTypeError < Error
     def initialize(obj, expected)
       emsg = EMSG[:wrong_type] % [obj, expected]
       super(emsg)
-    end
-  end
-
-  class IntegerRequiredError < Error
-    def initialize(obj)
-      super(EMSG[:integer_required] % smart_error_value(obj))
-    end
-  end
-
-  class RealNumberRequiredError < Error
-    def initialize(obj)
-      super(EMSG[:real_number_required] % smart_error_value(obj))
-    end
-  end
-
-  class NumberRequiredError < Error
-    def initialize(obj)
-      super(EMSG[:number_required] % smart_error_value(obj))
-    end
-  end
-
-  class StringRequiredError < Error
-    def initialize(obj)
-      super(EMSG[:string_required] % smart_error_value(obj))
     end
   end
 
@@ -128,15 +129,21 @@ module Rus3
     end
   end
 
-  class CannotFindFileError < Error
-    def initialize(obj)
-      super(EMSG[:cannot_find_file] % smart_error_value(obj))
+  class UnsupportedMethodError < Error
+    def initialize
+      super(EMSG[:unsupported_method])
     end
   end
 
   class UnsupportedFeatureError < Error
     def initialize(feature, obj)
       super(EMSG[:unsupported_feature] % [feature, obj])
+    end
+  end
+
+  class CannotFindFileError < Error
+    def initialize(obj)
+      super(EMSG[:cannot_find_file] % smart_error_value(obj))
     end
   end
 

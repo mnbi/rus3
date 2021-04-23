@@ -75,7 +75,7 @@ module Rus3
         begin
           exp = @parser.read(STDIN)     # READ
         rescue SchemeSyntaxError => e
-          puts "ERROR: %s" % e
+          puts "ERROR" + (@verbose ? "(READ)" : "")  + ": %s" % e
           next
         end
         break FAREWELL_MESSAGE if exp.nil?
@@ -83,7 +83,7 @@ module Rus3
         begin
           value = @evaluator.eval(exp)  # EVAL
         rescue SyntaxError, StandardError => e
-          puts "ERROR: %s" % e
+          puts "ERROR" + (@verbose ? "(EVAL)" : "")  + ": %s" % e
           next
         end
 

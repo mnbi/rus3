@@ -155,7 +155,7 @@ module Rus3::Parser
         r_exp = translate_ident(token.literal)
       when :string
         r_exp = token.literal
-      when :ident, :boolean, :number, :op_proc
+      when :ident, :boolean, :char, :number, :op_proc
         trans_method_name = "translate_#{token.type}".intern
         r_exp = self.send(trans_method_name, token.literal)
       else
@@ -211,6 +211,17 @@ module Rus3::Parser
     def translate_boolean(s_exp_literal)
       # literal == "#f" or #t"
       (s_exp_literal[1] == "f") ? "false" : "true"
+    end
+
+    def translate_char(s_exp_literal)
+      c = s_exp_literal[2..-1]
+      case c
+      when "space"
+        c = " "
+      when "newline"
+        c = "\n"
+      end
+      "Char.new(\"#{c}\")"
     end
 
     def translate_number(s_exp_literal)

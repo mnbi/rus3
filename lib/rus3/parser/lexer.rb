@@ -17,6 +17,7 @@ module Rus3::Parser
       # value types
       :boolean,
       :ident,
+      :char,
       :string,
       :number,
       # operators
@@ -54,6 +55,15 @@ module Rus3::Parser
     RATIONAL   = Regexp.new("\\A[+-]?#{RAT_PAT}\\Z")
     COMPLEX    = Regexp.new("\\A[+-]?#{COMP_PAT}\\Z")
     PURE_IMAG  = Regexp.new("\\A[+-](#{C_IMAG_PAT})?i\\Z")
+
+    # char
+    SINGLE_CHAR_PAT = "."
+    SPACE_PAT       = "space"
+    NEWLINE_PAT     = "newline"
+
+    CHAR_PREFIX = "\#\\\\"
+    CHAR_PAT    = "(#{SINGLE_CHAR_PAT}|#{SPACE_PAT}|#{NEWLINE_PAT})"
+    CHAR        = Regexp.new("\\A#{CHAR_PREFIX}#{CHAR_PAT}\\Z")
 
     KEYWORDS = {
       "LAMBDA" => :lambda,
@@ -102,6 +112,8 @@ module Rus3::Parser
             else
               Token.new(:ident, literal.gsub(EXTENDED_REGEXP, EXTENDED_MAP))
             end
+          when CHAR
+            Token.new(:char, literal)
           when STRING
             Token.new(:string, literal)
           when "="

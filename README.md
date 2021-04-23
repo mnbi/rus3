@@ -54,6 +54,11 @@ Rus3(scheme)> 3+4i
 ==> (3+4i)
 Rus3(scheme)> #(1 2 3)
 ==> #<Rus3::Vector:0x00007facf12d9fb0 @content=[1, 2, 3]>
+Rus3(scheme)> #\a
+==> #<Rus3::Char:0x00007fc41f1059d8
+ @char="a",
+ @codepoint=97,
+ @encoding=#<Encoding:UTF-8>>
 ```
 
 ### Procedure call
@@ -117,14 +122,18 @@ Following procedures described in the spec is available.
 - Predicates:
   - null?, list?
   - eqv?, eq?
-  - boolean?, pair?, symbol?, number?, string?, vector?
-    - char? and port? are defined but it always returns `false`.
+  - boolean?, pair?, symbol?, number?, string?, vector?, char?
+    - port? are defined but it always returns `false`.
   - complex?, real?, rational?, integer?
   - zero?, positive?, negative?, odd?, even?
   - string-eq?, string-ci-eq?, string-lt?, string-gt?, string-le?,
     string-ge?, string-ci-lt?, string-ci-gt?, string-ci-le?, string-ci-ge?
-  - some predicates for `char` and `port` are defined but it always
-    returns `false`.
+  - char-eq?, char-lt?, char-gt?, char-le?, char-ge?,
+    char-ci-eq?, char-ci-lt?, char-ci-gt?, char-ci-le?, char-ci-ge?,
+	char-alphabetic?, char-numeric?, char-whitespace?,
+	char-upper-case?, char-lower-case?
+  - some predicates for `port` are defined but it always returns
+    `false`.
 
 - List operations
   - cons, car, cdr, set-car!, set-cdr!, cxxr (caar and so on)
@@ -133,6 +142,9 @@ Following procedures described in the spec is available.
 - Vector operations
   - make-vector, vector, vector-length, vector-ref, vector-set!,
     vector->list, list->vector, vector-fill!
+
+- Char operations
+  - char->integer, integer->char, char-upcase, char-downcase
 
 - Write values
   - write
@@ -169,6 +181,7 @@ deviations from the Scheme specification (R5RS or R7RS-small).
   identifier in Ruby.  So, it is possible that some collision of
   identifiers.
 - Nested definition of procedure can use outside.
+- All characters and strings are treated as encoded in UTF-8.
 
 Some of these may be disappeared in the future version, or may not be.
 
