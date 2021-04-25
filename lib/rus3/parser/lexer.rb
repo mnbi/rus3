@@ -7,6 +7,14 @@ module Rus3::Parser
     # Indicates the version of the lexer class
     LEXER_VERSION = "0.1.1"
 
+    class << self
+
+      def version
+        "(scheme-lexer :version #{LEXER_VERSION})"
+      end
+
+    end
+
     # :stopdoc:
 
     TYPES = [
@@ -75,7 +83,9 @@ module Rus3::Parser
 
     # :startdoc:
 
-    Token = Struct.new(:type, :literal) # :nodoc:
+    Token = Struct.new(:type, :literal) { # :nodoc:
+      alias :to_s :literal
+    }
 
     class << self
 

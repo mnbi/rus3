@@ -125,7 +125,7 @@ module Rus3
 
   class SchemeSyntaxError < Error
     def initialize(obj)
-      super(EMSG[:scheme_syntax_error] % smart_error_value(obj))
+      super(EMSG[:scheme_syntax_error] % "#{obj[1]} as #{obj[0]}")
     end
   end
 

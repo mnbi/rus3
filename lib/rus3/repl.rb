@@ -21,13 +21,13 @@ module Rus3
   class Repl
 
     # Indicates the version of the Repl class.
-    VERSION = "0.1.0"
+    REPL_VERSION = "0.1.0"
 
     class << self
 
       # Starts REPL.
-      def start(verbose: false)
-        repl = Repl.new(verbose: verbose)
+      def start(parser: nil, evaluator: nil, verbose: false)
+        repl = Repl.new(parser: parser, evaluator: evaluator, verbose: verbose)
         repl.loop
       end
 
@@ -35,9 +35,9 @@ module Rus3
 
     # Hods major component names of the REPL.
     COMPONENTS = {
-      :parser => Parser::DEFAULT_PARSER,
-      :evaluator => Evaluator,
-      :printer => nil,
+      :parser    => Parser::DEFAULT_PARSER,
+      :evaluator => Evaluator::DEFAULT_EVALUATOR,
+      :printer   => nil,
     }
 
     # Prompt for input.
@@ -49,14 +49,20 @@ module Rus3
     @@value_history = []        # :nodoc:
 
     attr_accessor :verbose      # :nodoc:
+    attr_accessor :prompt       # :nodoc:
 
-    def initialize(verbose: false)
-      COMPONENTS.each { |name, klass|
+    def initialize(parser: nil, evaluator: nil, verbose: false)
+      comps = COMPONENTS.dup
+
+      comps[:parser] = Parser.const_get("#{parser.capitalize}Parser") if parser
+      comps[:evaluator] = Evaluator.const_get("#{evaluator.capitalize}Evaluator") if evaluator
+
+      comps.each { |name, klass|
         instance_variable_set("@#{name}", klass.nil? ? self : klass.new)
       }
 
       @prompt = PROMPT
-      @parser.prompt = PROMPT unless @parser.nil?
+      @parser.prompt = PROMPT
 
       @verbose = verbose
       @evaluator.verbose = verbose
@@ -96,15 +102,20 @@ module Rus3
 
     # Shows the greeting message.
     def greeting
-      puts "A simple REPL for Rus3:"
-      puts "- Rus3 version: #{Rus3::VERSION} (#{Rus3::RELEASE})"
+      puts "A simple REPL to run Rus3:"
       return unless @verbose
 
-      puts "  - REPL version: #{VERSION}"
+      vmsg =  "(rus3 :version #{Rus3::VERSION} :release #{Rus3::RELEASE}\n"
+      vmsg += "  (repl :version #{REPL_VERSION}\n"
+
+      comp_vmsgs = []
       COMPONENTS.keys.each { |comp_name|
-        Kernel.print "    - "
-        print_version(comp_name)
+        comp_vmsgs << "    (#{version_message(comp_name)})"
       }
+      vmsg += comp_vmsgs.join("\n")
+      vmsg += "))"
+
+      puts vmsg
     end
 
     # :stopdoc:
@@ -130,12 +141,21 @@ module Rus3
 
     private
 
+    def version_message(comp_name)
+      vmsg = nil
+      component = instance_variable_get("@#{comp_name}")
+      if component.nil? or component == self
+        vmsg = ":using :built-in :#{comp_name}"
+      else
+        vmsg = "#{component.version}"
+      end
+      vmsg
+    end
+
     def define_constants        # :nodoc:
       return if @evaluator.nil?
 
-      r = @evaluator.binding.receiver
-
-      r.instance_eval {
+      @evaluator.instance_eval {
         self.class.const_set(:RUS3_VERSION, "#{VERSION}")
       }
     end
@@ -143,9 +163,7 @@ module Rus3
     def define_help_feature     # :nodoc:
       return if @evaluator.nil?
 
-      r = @evaluator.binding.receiver
-
-      r.instance_eval {
+      @evaluator.instance_eval {
         def _help
           puts <<HELP
 A simple REPL for Rus3.
@@ -167,10 +185,8 @@ HELP
     def define_history_feature  # :nodoc:
       return if @evaluator.nil?
 
-      r = @evaluator.binding.receiver
-
-      r.instance_variable_set(:@value_history, @@value_history)
-      r.instance_eval {
+      @evaluator.instance_variable_set(:@value_history, @@value_history)
+      @evaluator.instance_eval {
 
         def _last_value
           @value_history[-1]
@@ -201,10 +217,8 @@ HELP
     def define_load_feature
       return if @evaluator.nil?
 
-      r = @evaluator.binding.receiver
-
-      r.instance_variable_set(:@scm_parser, Parser::SchemeParser.new)
-      r.instance_eval {
+      @evaluator.instance_variable_set(:@scm_parser, Parser::SchemeParser.new)
+      @evaluator.instance_eval {
         def load_scm(path)
           raise Rus3::CannotFindFileError, path unless FileTest.exist?(path)
           scm_source = nil
@@ -214,15 +228,6 @@ HELP
           self.binding.eval(r_exp)
         end
       }
-    end
-
-    def print_version(comp_name)
-      component = instance_variable_get("@#{comp_name}")
-      if component.nil? or component == self
-        puts "using built-in #{comp_name.upcase}"
-      else
-        puts "#{component.version}"
-      end
     end
 
     def history_push(value)

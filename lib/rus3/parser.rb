@@ -16,21 +16,33 @@ module Rus3
       # loop.
       attr_accessor :prompt
 
+      # Constructs the version string.
+
+      def version
+        "parser-module :version #{VERSION}"
+      end
+
       def initialize
         @prompt = ""
       end
 
-      # Constructs the version string.
-
-      def version
-        "Parser version #{VERSION}"
+      def prompt=(str)
+        index = str.index(">")
+        class_name = self.class.name.split("::")[-1]
+        parser_name = class_name.delete_suffix("Parser").downcase
+        @prompt = str[0...index] + "(#{parser_name})" + str[index..-1]
       end
 
       # Reads an expression from the passed IO instance.  Returns nil
       # when reaches to EOF.
 
       def read(io = STDIN)
-        exp = Readline::readline(@prompt, true)
+        exp = nil
+        if io == STDIN
+          exp = Readline::readline(@prompt, true)
+        else
+          exp = io.readlines(chomp: true).join(" ")
+        end
         exp.nil? ? nil : parse(exp)
       end
 
@@ -48,23 +60,26 @@ module Rus3
 
     require_relative "parser/scheme_parser"
 
-    DEFAULT_PARSER = SchemeParser # :nodoc:
-
     # :stopdoc:
 
     class PassthroughParser < Parser
       PARSER_VERSION = "0.1.0"
 
       def version
-        super + " (Pass Through Parser version: #{PARSER_VERSION})"
+        vmsg = "(pass-through-parser version: #{PARSER_VERSION})"
+        vmsg += " #{Lexer.version}"
+        super + " (#{vmsg})"
       end
-    end
 
-    def parse(exp)
-      exp
+      def parse(exp)
+        [Lexer.new(exp).map {|tk| tk.to_s}]
+      end
+
     end
 
     # :startdoc:
+
+    DEFAULT_PARSER = SchemeParser # :nodoc:
 
   end
 

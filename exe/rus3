@@ -2,17 +2,40 @@
 
 require "rus3"
 
+def usage
+  puts <<HELP
+usage:
+    rus3 [option]
+option:
+    -e, --evaluator NAME : specify evaluator
+    -v, --version : print version
+    -h, --help    : show this message
+
+    Following names are available as evaluator name:
+        scheme (use by default), passthrough
+HELP
+end
+
 opts = {}
 
 while ARGV.size > 0
   arg = ARGV.shift
   case arg
+  when "-p", "--parser"
+    parser_name = ARGV.shift
+    opts[:parser] = parser_name
+  when "-e", "--evaluator"
+    evaluator_name = ARGV.shift
+    opts[:evaluator] = evaluator_name
   when "-d", "--debug"
-    opts[:debug] = true
+    opts[:verbose] = true
   when "-v", "--version"
     puts "rus3 version #{Rus3::VERSION} (#{Rus3::RELEASE})"
+    exit 0
+  when "-h", "--help"
+    usage
     exit 0
   end
 end
 
-Rus3::Repl.start(verbose: opts[:debug])
+Rus3::Repl.start(**opts)
