@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+- (nothing to record here)
+
+## [0.2.0] - 2021-04-28
+### Added
+- Re-write the parser and evaluator mechanism.
 - Add a mechanism to replace comparison operator characters in
   identifiers.
   - e.g. `char<?` -> `char_lt?`

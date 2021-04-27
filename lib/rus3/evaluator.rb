@@ -6,7 +6,7 @@ module Rus3
     require_relative "evaluator/environment"
 
     # Indicates the version of the evaluator module.
-    VERSION = "0.1.0"
+    VERSION = "0.2.0"
 
     # An evaluator.
     class Evaluator
@@ -21,7 +21,7 @@ module Rus3
         super
       end
 
-      def eval(i_exps); nil; end
+      def eval(ast); nil; end
 
       def version
         "evaluator-module version: #{VERSION}"
@@ -36,14 +36,14 @@ module Rus3
         super + " (pass-through-evaluator version: #{EVALUATOR_VERSION})"
       end
 
-      def eval(i_exps)
+      def eval(ast)
         if @verbose
-          i_exps.each { |i_exp|
+          ast.each { |node|
             print "  evaluator(pass-through): "
-            pp i_exp
+            pp node
           }
         end
-        i_exps.join(" ")
+        ast.join(" ")
       end
 
     end

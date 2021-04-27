@@ -12,9 +12,22 @@ module Rus3::Evaluator
     end
 
     def initialize
+      @procedure_map = {}
     end
 
-    RB_KEYWORDS = {
+    def add_procedure_map(map)
+      @procedure_map.merge!(map)
+    end
+
+    # Reads an i-exp (intermediate-expression, or generally called as
+    # AST) then translates it to r-exp (ruby-expression, which can be
+    # evaluated by Kernel.eval.  Returns the r-exp.
+
+    def translate(i_exp)
+      return ""
+    end
+
+    RB_KEYWORDS_MAP = {
       "BEGIN"    => nil,
       "END"      => nil,
       "alias"    => nil,
@@ -58,12 +71,46 @@ module Rus3::Evaluator
       "__ENCODING__" => nil,
     }
 
-    # Reads an i-exp (intermediate-expression, or generally called as
-    # AST) then translates it to r-exp (ruby-expression, which can be
-    # evaluated by Kernel.eval.  Returns the r-exp.
+    COMPARISON_OPS_MAP = {
+      "="  => "eq",
+      "<"  => "lt",
+      ">"  => "gt",
+      "<=" => "le",
+      ">=" => "ge",
+    }
 
-    def translate(i_exp)
-      return ""
+    EXTENDED_CHARS_MAP = {
+      "!" => "!",             # no conversion
+      "$" => "$",             # no conversion
+      "%" => "%",             # no conversion
+      "&" => "&",             # no conversion
+      "*" => "*",             # no conversion
+      "+" => "+",             # no conversion
+      "-" => "_",
+      "." => ".",             # no conversion
+      "/" => "/",             # no conversion
+      ":" => ":",             # no conversion
+      "<" => "<",             # no conversion
+      "=" => "=",             # no conversion
+      ">" => "to_",
+      "?" => "?",             # no conversion
+      "@" => "@",             # no conversion
+      "^" => "^",             # no conversion
+      "_" => "_",             # no conversion
+      "~" => "~",             # no conversion
+    }
+
+    def replace_extended_char(literal)
+      result = literal
+
+      COMPARISON_OPS_MAP.each { |op, word|
+        comparison_regexp = Regexp.new("#{op}\\?\\Z")
+        if comparison_regexp === literal
+          result = literal.sub(comparison_regexp, "_#{word}?")
+        end
+      }
+
+      result.gsub(EXTENDED_REGEXP, EXTENDED_CHARS_MAP)
     end
 
   end

@@ -7,7 +7,7 @@ module Rus3
     require_relative "parser/lexer"
 
     # Indicates the version of the parser module.
-    VERSION = "0.1.0"
+    VERSION = "0.2.0"
 
     # A base class to derived a parser.
     class Parser
@@ -33,26 +33,27 @@ module Rus3
         @prompt = str[0...index] + "(#{parser_name})" + str[index..-1]
       end
 
-      # Reads an expression from the passed IO instance.  Returns nil
-      # when reaches to EOF.
+      # Reads program source from the passed IO instance, then returns
+      # the AST (abstract syntax tree).  Returns nil when reaches to
+      # EOF.
 
       def read(io = STDIN)
-        exp = nil
+        program_source = nil
         if io == STDIN
-          exp = Readline::readline(@prompt, true)
+          program_source = Readline::readline(@prompt, true)
         else
-          exp = io.readlines(chomp: true).join(" ")
+          program_source = io.readlines(chomp: true).join(" ")
         end
-        exp.nil? ? nil : parse(exp)
+        program_source.nil? ? nil : parse(program_source)
       end
 
       protected
 
-      # Parses the passed expression, then returns the processed
-      # expression to be evaluated by an evaluator.  How to process
-      # depends on each derived parser class.
+      # Parses the passed program source, then returns the AST to be
+      # evaluated by an evaluator.  How to process depends on each
+      # derived parser class.
 
-      def parse(exp)
+      def parse(program_source)
         nil
       end
 
@@ -63,7 +64,7 @@ module Rus3
     # :stopdoc:
 
     class PassthroughParser < Parser
-      PARSER_VERSION = "0.1.0"
+      PARSER_VERSION = "0.2.0"
 
       def version
         vmsg = "(pass-through-parser version: #{PARSER_VERSION})"
@@ -71,8 +72,8 @@ module Rus3
         super + " (#{vmsg})"
       end
 
-      def parse(exp)
-        [Lexer.new(exp).map {|tk| tk.to_s}]
+      def parse(program_source)
+        [Lexer.new(program_source).map {|tk| tk.to_s}]
       end
 
     end

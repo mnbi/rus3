@@ -5,37 +5,38 @@ module Rus3::Parser
   class Lexer < Enumerator
 
     # Indicates the version of the lexer class
-    LEXER_VERSION = "0.1.1"
+    LEXER_VERSION = "0.2.0"
 
     class << self
 
-      def version
+      def version               # :nodoc:
         "(scheme-lexer :version #{LEXER_VERSION})"
       end
 
     end
 
-    # :stopdoc:
-
-    TYPES = [
+    TOKEN_TYPES = [             # :nodoc:
       # delimiters
-      :lparen,
-      :rparen,
-      :vec_lparen,
+      :lparen,                  # `(`
+      :rparen,                  # `)`
+      :vec_lparen,              # `#(`
       # value types
-      :boolean,
-      :ident,
-      :char,
-      :string,
-      :number,
+      :identifier,              # `foo`
+      :boolean,                 # `#f` or `#t` (`#false` or `#true`)
+      :number,                  # `123`, `456.789`, `1/2`, `3+4i`
+      :character,               # `#\a`
+      :string,                  # `"hoge"`
       # operators
-      :op_proc,
-      # keywords
-      :if,
-      :define,
+      :op_proc,                 # `+`, `-`, ...
       # control
       :illegal,
     ]
+
+    Token = Struct.new(:type, :literal) { # :nodoc:
+      alias :to_s :literal
+    }
+
+    # :stopdoc:
 
     BOOLEAN    = /\A#(f|t)\Z/
     STRING     = /\A\"[^\"]*\"\Z/
@@ -83,10 +84,6 @@ module Rus3::Parser
 
     # :startdoc:
 
-    Token = Struct.new(:type, :literal) { # :nodoc:
-      alias :to_s :literal
-    }
-
     class << self
 
       def new(exp, _ = nil)
@@ -118,14 +115,12 @@ module Rus3::Parser
             if SCM_KEYWORDS.keys.include?(key)
               Token.new(SCM_KEYWORDS[key], literal)
             else
-              Token.new(:ident, replace_extended_char(literal))
+              Token.new(:identifier, literal)
             end
           when CHAR
-            Token.new(:char, literal)
+            Token.new(:character, literal)
           when STRING
             Token.new(:string, literal)
-          when "="
-            Token.new(:op_proc, "==")
           when ARITHMETIC_OPS, COMPARISON_OPS
             Token.new(:op_proc, literal)
           when REAL_NUM, RATIONAL, COMPLEX, PURE_IMAG
@@ -134,48 +129,6 @@ module Rus3::Parser
             Token.new(:illegal, literal)
           end
         }
-      end
-
-      COMPARISON_OPS_MAP = {
-        "="  => "eq",
-        "<"  => "lt",
-        ">"  => "gt",
-        "<=" => "le",
-        ">=" => "ge",
-      }
-
-      EXTENDED_CHARS_MAP = {
-        "!" => "!",             # no conversion
-        "$" => "$",             # no conversion
-        "%" => "%",             # no conversion
-        "&" => "&",             # no conversion
-        "*" => "*",             # no conversion
-        "+" => "+",             # no conversion
-        "-" => "_",
-        "." => ".",             # no conversion
-        "/" => "/",             # no conversion
-        ":" => ":",             # no conversion
-        "<" => "<",             # no conversion
-        "=" => "=",             # no conversion
-        ">" => "to_",
-        "?" => "?",             # no conversion
-        "@" => "@",             # no conversion
-        "^" => "^",             # no conversion
-        "_" => "_",             # no conversion
-        "~" => "~",             # no conversion
-      }
-
-      def replace_extended_char(literal)
-        result = literal
-
-        COMPARISON_OPS_MAP.each { |op, word|
-          comparison_regexp = Regexp.new("#{op}\\?\\Z")
-          if comparison_regexp === literal
-            result = literal.sub(comparison_regexp, "_#{word}?")
-          end
-        }
-
-        result.gsub(EXTENDED_REGEXP, EXTENDED_CHARS_MAP)
       end
 
     end

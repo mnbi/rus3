@@ -17,9 +17,10 @@ module Rus3::Evaluator
       super
 
       @env = Environment.new
-      @translator = Translator.new
-
       define_procs_for_infix_ops
+
+      @translator = Translator.new
+      @translator.add_procedure_map(INFIX_OPS_MAP)
     end
 
     def instance_eval(&proc)
@@ -30,10 +31,10 @@ module Rus3::Evaluator
       end
     end
 
-    def eval(i_exps)
-      r_exps = i_exps.map { |exp| @translator.translate(exp) }.join("\n")
-      pp r_exps if @verbose
-      @env.binding.eval(r_exps)
+    def eval(ast)
+      ruby_source = ast.map { |node| @translator.translate(node) }.join("\n")
+      pp ruby_source if @verbose
+      @env.binding.eval(ruby_source)
     end
 
     def binding
@@ -42,7 +43,7 @@ module Rus3::Evaluator
 
     private
 
-    INFIX_OPS = {
+    INFIX_OPS_MAP = {
       :+  => :add,
       :-  => :subtract,
       :*  => :mul,
@@ -57,7 +58,7 @@ module Rus3::Evaluator
 
     def define_procs_for_infix_ops
       r = @env.binding.receiver
-      INFIX_OPS.each { |op, proc_name|
+      INFIX_OPS_MAP.each { |op, proc_name|
         r.instance_eval("def #{proc_name}(op1, op2); op1 #{op} op2; end")
       }
     end

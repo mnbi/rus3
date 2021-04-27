@@ -21,7 +21,7 @@ module Rus3
   class Repl
 
     # Indicates the version of the Repl class.
-    REPL_VERSION = "0.1.0"
+    REPL_VERSION = "0.2.0"
 
     class << self
 
@@ -79,15 +79,15 @@ module Rus3
     def loop
       msg = Kernel.loop {               # LOOP
         begin
-          exp = @parser.read(STDIN)     # READ
+          ast = @parser.read(STDIN)     # READ
         rescue SchemeSyntaxError => e
           puts "ERROR" + (@verbose ? "(READ)" : "")  + ": %s" % e
           next
         end
-        break FAREWELL_MESSAGE if exp.nil?
+        break FAREWELL_MESSAGE if ast.nil?
 
         begin
-          value = @evaluator.eval(exp)  # EVAL
+          value = @evaluator.eval(ast)  # EVAL
         rescue SyntaxError, StandardError => e
           puts "ERROR" + (@verbose ? "(EVAL)" : "")  + ": %s" % e
           next
@@ -128,8 +128,8 @@ module Rus3
       Readline::readline(@prompt, true)
     end
 
-    def eval(exp)
-      exp
+    def eval(ast)
+      ast
     end
 
     def print(obj)
@@ -221,11 +221,10 @@ HELP
       @evaluator.instance_eval {
         def load_scm(path)
           raise Rus3::CannotFindFileError, path unless FileTest.exist?(path)
-          scm_source = nil
-          File.open(path, "r") {|f| scm_source = f.readlines(chomp: true)}
-          s_exp = scm_source.join(" ")
-          r_exp = @scm_parser.parse(s_exp)
-          self.binding.eval(r_exp)
+          scheme_source = nil
+          File.open(path, "r") {|f| scheme_source = f.readlines(chomp: true)}
+          ast = @scm_parser.parse(scheme_source.join(" "))
+          self.binding.eval(ast)
         end
       }
     end
