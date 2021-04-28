@@ -5,17 +5,15 @@ module Rus3
   module AST
 
     TOKEN_TYPE_MAP = {
-      :program => [],
-      :identifier => [:identifier,],
-      :keyword => [:lambda, :if, :set!, :define, :cond, :let, :else,],
-      :peculiar_identifier => [:op_proc,],
-      :self_evaluating => [:boolean, :number, :character, :string,],
-      :derived_expression_types => [
-        :cond, :case, :and, :or, :let, :let_star, :letrec, :begin, :do, :delay,
-      ],
-      :vector => [:vec_lparen,],
-      :list => [:lparen,],
-      :illegal => [:illegal,],
+      program: [],
+      dot: [:dot],
+      identifier: [:identifier,],
+      peculiar_identifier: [:op_proc,],
+      self_evaluating: [:boolean, :number, :character, :string,],
+      vector: [:vec_lparen,],
+      list: [:lparen,],
+      quotation: [:quotation,],
+      illegal: [:illegal,],
     }
 
     class << self
@@ -35,12 +33,12 @@ module Rus3
         ProgramNode.new
       end
 
-      def identifier(token)
-        IdentifierNode.new(token.literal)
+      def dot(token)
+        DotNode.new(token.literal)
       end
 
-      def keyword(token)
-        KeywordNode.new(token.literal)
+      def identifier(token)
+        IdentifierNode.new(token.literal)
       end
 
       def peculiar_identifier(token)
@@ -53,12 +51,41 @@ module Rus3
         klass.new(token.literal)
       end
 
-      def vector(_ = nil)
+      def procedure_call(_token)
+        ProcedureCallNode.new
+      end
+
+      def lambda_expression(_token)
+        LambdaExpressionNode.new
+      end
+
+      def conditional(_token)
+        ConditionalNode.new
+      end
+
+      def assignment(_token)
+        AssignmentNode.new
+      end
+
+      def macro_block(token)
+        MacroBlockNode.new(token.literal)
+      end
+
+      def derived_expression(token)
+        # not implemented yet ...
+        nil
+      end
+
+      def vector(_token = nil)
         VectorNode.new
       end
 
-      def list(_ = nil)
+      def list(_token = nil)
         ListNode.new
+      end
+
+      def quotation(_token = nil)
+        QuotationNode.new
       end
 
       def illegal(token)
@@ -110,8 +137,22 @@ module Rus3
         @nodes << node
       end
 
+      def [](index)
+        raise OutOfRangeError, index if index >= @nodes.size
+        @nodes[index]
+      end
+
       def each(&block)
-        @nodes.each(&block)
+        if block.nil?
+          @nodes.each
+        else
+          @nodes.each(&block)
+          self
+        end
+      end
+
+      def to_s
+        @nodes.map(&:to_s).join(" ")
       end
 
     end
@@ -125,10 +166,10 @@ module Rus3
       end
     end
 
-    class IdentifierNode < LeafNode
+    class DotNode < LeafNode
     end
 
-    class KeywordNode < IdentifierNode
+    class IdentifierNode < LeafNode
     end
 
     class PeculiarIdentifier < IdentifierNode
@@ -147,9 +188,17 @@ module Rus3
     end
 
     class VectorNode < BranchNode
+      def to_s
+        str = "#(" + super + ")"
+      end
     end
 
     class ListNode < BranchNode
+      def initialize(first_literal = nil)
+        super()
+        @nodes << IdentifierNode.new(first_literal) if first_literal
+      end
+
       def car
         @nodes[0]
       end
@@ -157,30 +206,87 @@ module Rus3
       def cdr
         @nodes[1..-1]
       end
+
+      def to_s
+        str = "(" + super + ")"
+      end
     end
 
-    class LambdaExpressionNode < BranchNode
+    class QuotationNode < ListNode
+      def initialize
+        super("quote")
+      end
+    end
+
+    class ProcedureCallNode < ListNode
+      def initialize
+        super
+      end
+
+      def operator
+        @nodes[0]
+      end
+
+      def operator=(node)
+        @nodes[0] = node
+      end
+
+      def operands
+        @nodes[1..-1]
+      end
+
+      def add_operand(node)
+        @nodes[0] = nil if @nodes.size < 1 # keep space for operator node
+        @nodes << node
+      end
+    end
+
+    class LambdaExpressionNode < ListNode
+      def initialize
+        super("lambda")
+      end
+
       def formals
-        @node[0]
+        @nodes[1]
       end
 
       def formals=(list_node)
-        @node[0] = list_node
+        @nodes[1] = list_node
       end
 
       def body
-        @node[1..-1]
+        @nodes[2..-1]
       end
 
-      def body=(*nodes)
-        @node.concat(nodes)
+      def body=(nodes)
+        @nodes[0] = nil if @nodes.size < 1 # keep space for `lambda`
+        @nodes[1] = nil if @nodes.size < 2 # keep space for formals
+        @nodes.concat(nodes)
       end
     end
 
-    class ConditionalNode < BranchNode
+    class ConditionalNode < ListNode
+      def initialize
+        super("if")
+      end
     end
 
-    class MacroBlockNode < BranchNode
+    class AssignmentNode < ListNode
+      def initialize
+        super("set!")
+      end
+    end
+
+    class AndNode < ListNode
+      def initialize
+        super("and")
+      end
+    end
+
+    class MacroBlockNode < ListNode
+      def initialize(literal)
+        super(literal)
+      end
     end
 
     class IllegalNode < Node

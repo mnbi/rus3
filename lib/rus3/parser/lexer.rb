@@ -19,6 +19,8 @@ module Rus3::Parser
       # delimiters
       :lparen,                  # `(`
       :rparen,                  # `)`
+      :dot,                     # `.`
+      :quotation,               # `'`
       :vec_lparen,              # `#(`
       # value types
       :identifier,              # `foo`
@@ -38,7 +40,7 @@ module Rus3::Parser
 
     # :stopdoc:
 
-    BOOLEAN    = /\A#(f|t)\Z/
+    BOOLEAN    = /\A#(f(alse)?|t(rue)?)\Z/
     STRING     = /\A\"[^\"]*\"\Z/
 
     # idents
@@ -72,16 +74,6 @@ module Rus3::Parser
     CHAR_PAT    = "(#{SINGLE_CHAR_PAT}|#{SPACE_PAT}|#{NEWLINE_PAT})"
     CHAR        = Regexp.new("\\A#{CHAR_PREFIX}#{CHAR_PAT}\\Z")
 
-    SCM_KEYWORDS = {
-      "LAMBDA" => :lambda,
-      "IF"     => :if,
-      "SET!"   => :set!,
-      "DEFINE" => :define,
-      "COND"   => :cond,
-      "LET"    => :let,
-      "ELSE"   => :else,        # may use with :cond
-    }
-
     # :startdoc:
 
     class << self
@@ -95,10 +87,10 @@ module Rus3::Parser
         }
       end
 
-      S2R_MAP = { "(" => "[ ", ")" => " ]" } # :nodoc:
+      S2R_MAP = { "(" => "[ ", ")" => " ]", "'" => "' " } # :nodoc:
 
       def tokenize(exp)
-        source = exp.gsub(/[()]/, S2R_MAP)
+        source = exp.gsub(/[()']/, S2R_MAP)
 
         source.split(" ").map { |literal|
           case literal
@@ -106,17 +98,16 @@ module Rus3::Parser
             Token.new(:lparen, literal)
           when "]"
             Token.new(:rparen, literal)
+          when "."
+            Token.new(:dot, literal)
+          when "'"
+            Token.new(:quotation, literal)
           when "#["
             Token.new(:vec_lparen, literal)
           when BOOLEAN
             Token.new(:boolean, literal)
           when IDENTIFIER
-            key = literal.upcase
-            if SCM_KEYWORDS.keys.include?(key)
-              Token.new(SCM_KEYWORDS[key], literal)
-            else
-              Token.new(:identifier, literal)
-            end
+            Token.new(:identifier, literal)
           when CHAR
             Token.new(:character, literal)
           when STRING

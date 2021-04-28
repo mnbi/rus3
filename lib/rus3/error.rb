@@ -46,6 +46,7 @@ module Rus3
     :unsupported_method => "specified method does not work now.",
     :unsupported_feature => "specified feature (`%s`) does not support for %s",
     :cannot_find_file => "cannot find %s",
+    :not_implemented_yet => "not implemented yet (%s)",
   }
 
   # :startdoc:
@@ -144,6 +145,12 @@ module Rus3
   class CannotFindFileError < Error
     def initialize(obj)
       super(EMSG[:cannot_find_file] % smart_error_value(obj))
+    end
+  end
+
+  class NotImplementedYetError < Error
+    def initialize(feature)
+      super(EMSG[:not_implemented_yet] % feature)
     end
   end
 

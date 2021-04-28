@@ -18,6 +18,7 @@ module Rus3::Parser
 
     def initialize
       super
+      @lexer = nil
       @curr_token = @peek_token = nil
     end
 
@@ -25,61 +26,70 @@ module Rus3::Parser
     # AST structure.
 
     def parse(program_source)
-      parse_program(Lexer.new(program_source))
+      @lexer = Lexer.new(program_source)
+      parse_program
     end
 
     # :stopdoc:
 
     private
 
+    def next_token
+      if @peek_token
+        @curr_token = @peek_token
+        @peek_token = nil
+      else
+        @curr_token = @lexer.next
+      end
+      @curr_token
+    end
+
+    def peek_token
+      if @peek_token.nil?
+        @peek_token = @lexer.next
+      end
+      @peek_token
+    end
+
+    def current_token
+      @curr_token
+    end
+
+    def push_back_token(token)
+      @peek_token = token
+    end
+
     # <program> -> <expression>*
-    def parse_program(lexer)
+    def parse_program
       program = Rus3::AST.program
       Kernel.loop {
-        node = parse_expression(lexer)
+        node = parse_expression
         program << node
       }
       program
     end
 
-    def peek_token(lexer)
-      if @peek_token.nil?
-        @peek_token = lexer.next
-      end
-      @peek_token
-    end
-
-    def next_token(lexer)
-      token = nil
-      if @peek_token
-        token = @peek_token
-        @peek_token = nil
-      else
-        token = lexer.next
-      end
-      token
-    end
-
     def delimiter?(token)
-      [:lparen, :vec_lparen].include?(token.type)
+      [:lparen, :quotation, :vec_lparen].include?(token.type)
     end
 
     # <expression> -> <simple expression> | <compound expression>
-    def parse_expression(lexer)
-      if delimiter?(peek_token(lexer))
-        parse_compound_expression(lexer)
+    def parse_expression
+      if delimiter?(peek_token)
+        parse_compound_expression
       else
-        parse_simple_expression(lexer)
+        parse_simple_expression
       end
     end
 
     # <simple expression> -> <identifier> | <self evaluating>
     # <self evaluating> -> <boolean> | <number> | <character> | <string>
-    def parse_simple_expression(lexer)
-      Rus3::AST.instantiate(next_token(lexer))
+    def parse_simple_expression
+      Rus3::AST.instantiate(next_token)
     end
 
-    # <compound expression> -> <vector> |
+    # <compound expression> -> <quotation> |
+    #   <vector> |
     #   <procedure call> |
     #   <lambda expression> |
     #   <conditional> |
@@ -87,43 +97,295 @@ module Rus3::Parser
     #   <derived expression> |
     #   <macro use> |
     #   <macro block> |
-    def parse_compound_expression(lexer)
+    def parse_compound_expression
       node = nil
-      token = peek_token(lexer)
+      token = peek_token
       case token.type
       when :vec_lparen
-        node = parse_vector(lexer)
+        node = parse_vector
       when :lparen
-        node = parse_list(lexer)
+        node = parse_list_expression
+      when :quotation
+        node = parse_quotation
       else
         raise Rus3::SchemeSynaxError, token.to_a
       end
     end
 
-    # <vetor> -> #( <datum>* )
-    def parse_vector(lexer)
-      parse_data_to_rparen(lexer)
+    def parse_list_expression
+      node = nil
+      next_token        # read :lparen
+      case peek_token.type
+      when :identifier
+        case peek_token.literal
+        when "lambda"           # lambda expression
+          node = parse_lambda_expression
+        when "if"               # conditional
+          node = parse_conditional
+        when "set!"             # assignment
+          node = parse_assignment
+        when "let-syntax", "letrec-syntax" # macro block
+          node = parse_macro_block
+        else
+          node = parse_derived_expression
+          node = parse_macro_use if node.nil?
+        end
+      end
+      node || parse_procedure_call
     end
 
-    def parse_data_to_rparen(lexer)
-      token = next_token(lexer)
+    def parse_macro_use
+      nil
+    end
+
+    # <procedure call> -> ( <operator> <operand>* )
+    # <operator> -> <expression>
+    # <operand> -> <expression>
+    def parse_procedure_call
+      proc_call_node = Rus3::AST.procedure_call(current_token)
+      proc_call_node.operator = parse_operator
+
+      Kernel.loop {
+        if peek_token.type == :rparen
+          next_token            # skip :rparen
+          break
+        end
+        proc_call_node.add_operand(parse_operand)
+      }
+      proc_call_node
+    end
+
+    def parse_operator
+      parse_expression
+    end
+
+    def parse_operand
+      parse_expression
+    end
+
+    # <lambda expression> -> ( lambda <formals> <body> )
+    # <formals> -> ( <identifier>* ) | <identifier> |
+    #   ( <identifier>+ . <identifier> )
+    # <body> -> <definition>* <sequence>
+    # <sequence> -> <command>* <expression>
+    # <command> -> <expression>
+    # <definition> ... see parse_definition
+    def parse_lambda_expression
+      lambda_node = Rus3::AST.lambda_expression(next_token)
+      lambda_node.formals = parse_formals
+      lambda_node.body = read_body
+    end
+
+    def parse_formals
+      token = next_token
+      formals = Rus3::AST.instantiate(token)
+      if token.type == :lparen
+        Kernel.loop {
+          token = next_token
+          break if token == :rparen
+          formals << Rus3::AST.instantiate(token)
+        }
+      end
+      formals
+    end
+
+    def read_body
+      body = []
+      Kernel.loop {
+        body << parse_expression
+      }
+      body
+    end
+
+    def parse_conditional
+      nil
+    end
+
+    def parse_assignment
+      nil
+    end
+
+    def parse_macro_block
+      nil
+    end
+
+    DERIVED_IDENTIFIERS = [
+      "cond", "case", "and", "or", "when", "unless",
+      "let", "let*", "letrec", "letrec*",
+      "let-values", "let*-values",
+      "begin", "do",
+      "delay", "delay-force",
+      "parameterize",
+      "guard",
+      "case-lambda",
+    ]
+
+    # <derived expression> ->
+    #   ( cond <cond clause>+ ) |
+    #   ( cond <cond cluase>* ( else <sequence> ) ) |
+    #   ( case <expression> <case caluse>+ ) |
+    #   ( case <expression> <case caluse>* ( else <sequence> ) ) |
+    #   ( case <expression> <case caluse>* ( else => <recipient> ) ) |
+    #   ( and <test>* ) |
+    #   ( or <test>* ) |
+    #   ( when <test> <sequence> ) |
+    #   ( unless <test> <sequence> ) |
+    #   ( let ( <binding spec>* ) <body> ) |
+    #   ( let* ( <binding spec>* ) <body> ) |
+    #   ( letrec ( <binding spec>* ) <body> ) |
+    #   ( letrec* ( <binding spec>* ) <body> ) |
+    #   ( let-values ( <my binding spec>* ) <body> ) |
+    #   ( let*-values ( <my binding spec>* ) <body> ) |
+    #   ( begin <sequence> ) |
+    #   ( do ( <iteration spec>* ) ( <test> <do result> ) <command>* ) |
+    #   ( delay <expression> ) |
+    #   ( delay-force <expression> ) |
+    #   ( parameterize ( ( <expression> <expression> )* ) <body> ) |
+    #   ( guard ( <identifier> <cond clause>* ) <body> ) |
+    #   ( case-lambda <case-lambda clause>* ) |
+    #   <quasiquotation>
+    def parse_derived_expression
+      node = nil
+      token = next_token
+      if token.type == :identifier
+        if DERIVED_IDENTIFIERS.include?(token.literal)
+          method_name = compose_method_name("parse_", token.literal).intern
+          method = self.method(method_name)
+          node = method.call
+        else
+          node = parse_quasiquotation
+        end
+      end
+      push_back_token(token) if node.nil?
+      node
+    end
+
+    SCM_CHAR_TO_RB_MAP = {
+      "*" => "_star",
+      "-" => "_",
+    }
+
+    def compose_method_name(prefix, type_name)
+      converted_name = type_name.gsub(/[*\-]/, SCM_CHAR_TO_RB_MAP)
+      prefix + converted_name
+    end
+
+    def not_implemented_yet(feature)
+      raise Rus3::NotImplementedYetError, feature
+    end
+
+    def parse_cond
+      not_implemented_yet("cond")
+    end
+
+    def parse_case
+      not_implemented_yet("case")
+    end
+
+    def parse_and
+      # ...
+    end
+
+    def parse_or
+      not_implemented_yet("or")
+    end
+
+    def parse_when
+      not_implemented_yet("when")
+    end
+
+    def parse_unless
+      not_implemented_yet("unless")
+    end
+
+    def parse_let
+      not_implemented_yet("let")
+    end
+
+    def parse_let_star
+      not_implemented_yet("let*")
+    end
+
+    def parse_letrec
+      not_implemented_yet("letrec")
+    end
+
+    def parse_letrec_star
+      not_implemented_yet("letrec*")
+    end
+
+    def parse_let_values
+      not_implemented_yet("let-values")
+    end
+
+    def parse_let_star_values
+      not_implemented_yet("let*-values")
+    end
+
+    def parse_begin
+      not_implemented_yet("begin")
+    end
+
+    def parse_do
+      not_implemented_yet("do")
+    end
+
+    def parse_delay
+      not_implemented_yet("delay")
+    end
+
+    def parse_delay_force
+      not_implemented_yet("delay-force")
+    end
+
+    def parse_parameterize
+      not_implemented_yet("parameterize")
+    end
+
+    def parse_guard
+      not_implemented_yet("guard")
+    end
+
+    def parse_case_lambda
+      not_implemented_yet("case-lambda")
+    end
+
+    def parse_quasiquotation
+      nil
+    end
+
+    # <quotation> -> '<datum> | ( quote <datum> )
+    def parse_quotation
+      token = next_token
+      quote_node = Rus3::AST.instantiate(token)
+      quote_node << parse_datum
+      quote_node
+    end
+
+    # <vetor> -> #( <datum>* )
+    def parse_vector
+      parse_data_to_rparen
+    end
+
+    def parse_data_to_rparen
+      token = next_token
       node = Rus3::AST.instantiate(token)
       raise Rus3::SchemeSyntaxError, token.to_a unless node.branch?
       Kernel.loop {
-        token = peek_token(lexer)
+        token = peek_token
         break if token.type == :rparen
-        node << parse_datum(lexer)
+        node << parse_datum
       }
-      next_token(lexer)         # skip :rparen
+      next_token                # skip :rparen
       node
     end
 
     # <datum> -> <simple datum> | <compound datum>
-    def parse_datum(lexer)
-      if delimiter?(peek_token(lexer))
-        parse_compound_datum(lexer)
+    def parse_datum
+      if delimiter?(peek_token)
+        parse_compound_datum
       else
-        parse_simple_datum(lexer)
+        parse_simple_datum
       end
     end
 
@@ -132,26 +394,26 @@ module Rus3::Parser
     # <symbol> -> <identifier>
     #
     # See `parse_simple_expression`.
-    def parse_simple_datum(lexer)
-      Rus3::AST.instantiate(next_token(lexer))
+    def parse_simple_datum
+      Rus3::AST.instantiate(next_token)
     end
 
     # <compound datum> -> <list> | <vector> | <abbreviation>
     # <abbreviation> -> <abbrev prefix> <datum>
-    def parse_compound_datum(lexer)
-      case peek_token(lexer).type
+    def parse_compound_datum
+      case peek_token.type
       when :lparen
-        parse_list(lexer)
+        parse_list
       when :vec_lparen
-        parse_vector(lexer)
+        parse_vector
       else
-        raise Rus3::SchemeSyntaxError, peek_token(lexer).to_a
+        raise Rus3::SchemeSyntaxError, peek_token.to_a
       end
     end
 
     # <list> -> ( <datum>* ) | ( <datum>+ . <datum> )
     def parse_list(lexer)
-      parse_data_to_rparen(lexer)
+      parse_data_to_rparen
     end
 
     # :startdoc:
