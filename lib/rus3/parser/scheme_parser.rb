@@ -88,15 +88,13 @@ module Rus3::Parser
       Rus3::AST.instantiate(next_token)
     end
 
+    def parse_identifier
+      Rus3::AST.instantiate(next_token)
+    end
+
     # <compound expression> -> <quotation> |
     #   <vector> |
-    #   <procedure call> |
-    #   <lambda expression> |
-    #   <conditional> |
-    #   <assignment> |
-    #   <derived expression> |
-    #   <macro use> |
-    #   <macro block> |
+    #   <list expression>
     def parse_compound_expression
       node = nil
       token = peek_token
@@ -112,6 +110,15 @@ module Rus3::Parser
       end
     end
 
+    # <list expression> ->
+    #   <procedure call> |
+    #   <lambda expression> |
+    #   <conditional> |
+    #   <assignment> |
+    #   <derived expression> |
+    #   <macro use> |
+    #   <macro block> |
+    #   <includer>
     def parse_list_expression
       node = nil
       next_token        # read :lparen
@@ -139,8 +146,6 @@ module Rus3::Parser
     end
 
     # <procedure call> -> ( <operator> <operand>* )
-    # <operator> -> <expression>
-    # <operand> -> <expression>
     def parse_procedure_call
       proc_call_node = Rus3::AST.procedure_call(current_token)
       proc_call_node.operator = parse_operator
@@ -155,18 +160,17 @@ module Rus3::Parser
       proc_call_node
     end
 
+    # <operator> -> <expression>
     def parse_operator
       parse_expression
     end
 
+    # <operand> -> <expression>
     def parse_operand
       parse_expression
     end
 
     # <lambda expression> -> ( lambda <formals> <body> )
-    # <formals> -> ( <identifier>* ) | <identifier> |
-    #   ( <identifier>+ . <identifier> )
-    # <body> -> <definition>* <sequence>
     # <sequence> -> <command>* <expression>
     # <command> -> <expression>
     # <definition> ... see parse_definition
@@ -174,35 +178,74 @@ module Rus3::Parser
       lambda_node = Rus3::AST.lambda_expression(next_token)
       lambda_node.formals = parse_formals
       lambda_node.body = read_body
+      lambda_node
     end
 
+    # <formals> -> ( <identifier>* ) | <identifier> |
+    #   ( <identifier>+ . <identifier> )
     def parse_formals
       token = next_token
       formals = Rus3::AST.instantiate(token)
       if token.type == :lparen
         Kernel.loop {
-          token = next_token
-          break if token == :rparen
-          formals << Rus3::AST.instantiate(token)
+          if peek_token.type == :rparen
+            next_token          # skip :rparen
+            break
+          end
+          formals << Rus3::AST.instantiate(next_token)
         }
       end
       formals
     end
 
+    # <body> -> <definition>* <sequence>
     def read_body
       body = []
       Kernel.loop {
+        if peek_token.type == :rparen
+          next_token            # skip :rparen
+          break
+        end
         body << parse_expression
       }
       body
     end
 
+    # <conditional> -> ( if <test> <consequent> <alternamte> )
     def parse_conditional
-      nil
+      cond_node = Rus3::AST.conditional(next_token)
+      cond_node.test = parse_test
+      cond_node.consequent = parse_consequent
+      if peek_token.type == :rparen
+        next_token              # skip :rparen
+      else
+        cond_node.alternate = parse_alternate
+      end
+      cond_node
     end
 
+    # <test> -> <expression>
+    def parse_test
+      parse_expression
+    end
+
+    # <consequent> -> <expression>
+    def parse_consequent
+      parse_expression
+    end
+
+    # <alternate> -> <expression> | <empty>
+    # <empty> -> ""
+    def parse_alternate
+      parse_expression
+    end
+
+    # <assignment> -> ( set! <identifier> <expression> )
     def parse_assignment
-      nil
+      assignment_node = Rus3::AST.assignment(next_token)
+      assignment_node.identifier = parse_identifier
+      assignment_node.expression = parse_expression
+      assignment_node
     end
 
     def parse_macro_block
@@ -274,6 +317,10 @@ module Rus3::Parser
       raise Rus3::NotImplementedYetError, feature
     end
 
+    # ( cond <cond clause>+ )
+    # ( cond <cond cluase>* ( else <sequence> ) )
+    #
+    # <cond clause> -> ( ( <datum>* ) <sequence> )
     def parse_cond
       not_implemented_yet("cond")
     end

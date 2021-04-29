@@ -51,7 +51,7 @@ module Rus3::Parser
 
     # operators
     ARITHMETIC_OPS = /\A[+\-*\/%]\Z/
-    COMPARISON_OPS = /\A[<>]=?\Z/
+    COMPARISON_OPS = /\A([<>]=?|=)\Z/
 
     # numbers
     REAL_PAT   = "(([1-9][0-9]*)|0)(\.[0-9]+)?"

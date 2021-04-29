@@ -5,15 +5,15 @@ module Rus3
   module AST
 
     TOKEN_TYPE_MAP = {
-      program: [],
-      dot: [:dot],
+      program:    [],
+      dot:        [:dot],
       identifier: [:identifier,],
       peculiar_identifier: [:op_proc,],
       self_evaluating: [:boolean, :number, :character, :string,],
-      vector: [:vec_lparen,],
-      list: [:lparen,],
-      quotation: [:quotation,],
-      illegal: [:illegal,],
+      vector:     [:vec_lparen,],
+      list:       [:lparen,],
+      quotation:  [:quotation,],
+      illegal:    [:illegal,],
     }
 
     class << self
@@ -124,9 +124,9 @@ module Rus3
     class BranchNode < Node
       include Enumerable
 
-      def initialize
-        super
-        @nodes = []
+      def initialize(size = nil)
+        super(nil)
+        @nodes = size.nil? ? [] : Array.new(size)
       end
 
       def branch?
@@ -194,9 +194,9 @@ module Rus3
     end
 
     class ListNode < BranchNode
-      def initialize(first_literal = nil)
-        super()
-        @nodes << IdentifierNode.new(first_literal) if first_literal
+      def initialize(first_literal = nil, initial_size = nil)
+        super(initial_size)
+        @nodes[0] = IdentifierNode.new(first_literal) if first_literal
       end
 
       def car
@@ -220,7 +220,8 @@ module Rus3
 
     class ProcedureCallNode < ListNode
       def initialize
-        super
+        # @nodes = [<operator>, <operand>]
+        super(nil, 1)
       end
 
       def operator
@@ -236,14 +237,14 @@ module Rus3
       end
 
       def add_operand(node)
-        @nodes[0] = nil if @nodes.size < 1 # keep space for operator node
         @nodes << node
       end
     end
 
     class LambdaExpressionNode < ListNode
       def initialize
-        super("lambda")
+        # @nodes = [<lambda>, <formals>, <body> ...]
+        super("lambda", 2)
       end
 
       def formals
@@ -259,21 +260,65 @@ module Rus3
       end
 
       def body=(nodes)
-        @nodes[0] = nil if @nodes.size < 1 # keep space for `lambda`
-        @nodes[1] = nil if @nodes.size < 2 # keep space for formals
-        @nodes.concat(nodes)
+        nodes.each_with_index { |node, i|
+          @nodes[i + 2] = node
+        }
       end
     end
 
     class ConditionalNode < ListNode
       def initialize
-        super("if")
+        super("if", 4)
+      end
+
+      def test
+        @nodes[1]
+      end
+
+      def consequent
+        @nodes[2]
+      end
+
+      def alternate
+        if @nodes.size > 3
+          @nodes[3]
+        else
+          nil
+        end
+      end
+
+      def test=(node)
+        @nodes[1] = node
+      end
+
+      def consequent=(node)
+        @nodes[2] = node
+      end
+
+      def alternate=(node)
+        @nodes[3] = node
       end
     end
 
     class AssignmentNode < ListNode
       def initialize
-        super("set!")
+        super("set!", 3)
+      end
+
+      def identifier
+        @nodes[1]
+      end
+
+      def identifier=(node)
+        @nodes[1] = node
+      end
+
+      def expression
+        @nodes[2]
+      end
+
+      def expression=(node)
+        @nodes[2] = node
       end
     end
 
