@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
+require "readline"
+
 module Rus3
 
   module Parser
-    require "readline"
-    require_relative "parser/lexer"
 
     # Indicates the version of the parser module.
     VERSION = "0.2.0"
@@ -14,7 +14,7 @@ module Rus3
 
       # Holds a prompt string.  It is intended to be set in the REPL
       # loop.
-      attr_accessor :prompt
+      attr_reader :prompt
 
       # Constructs the version string.
 

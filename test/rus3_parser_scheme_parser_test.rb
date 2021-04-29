@@ -8,134 +8,135 @@ class Rus3ParserSchemeParserTest < Minitest::Test
     @parser = Rus3::Parser::SchemeParser.new
   end
 
-  def test_it_can_translate_an_empty_list
-    expected = { "()" => "[]", }
-    assert_expected(expected)
+  def test_it_can_instantiate_ast_program
+    ast = @parser.parse("123")
+    assert_kind_of Rus3::AST::ProgramNode, ast
+    assert_equal :program, ast.type
   end
 
-  def test_it_can_translate_a_variable_reference
-    expected = { "foo" => "foo", }
-    assert_expected(expected)
+  def test_it_can_parse_boolean
+    tcs = ["#f", "#false", "#t", "#true"]
+    assert_simple_expression_type(tcs, Rus3::AST::BooleanNode, :boolean)
   end
 
-  def test_it_can_translate_literal_boolean
-    expected = {
-      "#f" => "false",
-      "#t" => "true",
+  def test_it_can_parse_identifier
+    tcs = ["foo", "hoge", "if", "define", "cond", "else"]
+    assert_simple_expression_type(tcs, Rus3::AST::IdentifierNode, :identifier)
+  end
+
+  def test_it_can_parse_character
+    tcs = ['#\a', '#\あ', '#\newline', '#\space']
+    assert_simple_expression_type(tcs, Rus3::AST::CharacterNode, :character)
+  end
+
+  def test_it_can_parse_string
+    tcs = ['"foo"', '"hoge"', '"if"', '"define"', '"cond"', '"else"']
+    assert_simple_expression_type(tcs, Rus3::AST::StringNode, :string)
+  end
+
+  def test_it_can_parse_number
+    tcs = ["123", "-1", "+23", "456.7890123", "1/2", "333/4444",
+           "5+6i", "7.0-8.9i", "-0+1i", "-2-3i"]
+    assert_simple_expression_type(tcs, Rus3::AST::NumberNode, :number)
+  end
+
+  def test_it_can_parse_dot
+    tcs = ["."]
+    assert_simple_expression_type(tcs, Rus3::AST::DotNode, :dot)
+  end
+
+  def test_it_cap_parse_operator
+    tcs = ["+", "-", "*", "/", "%", "<", ">", "<=", ">=", ]
+    assert_simple_expression_type(tcs, Rus3::AST::PeculiarIdentifierNode, :peculiar_identifier)
+  end
+
+  def test_it_can_parse_vector
+    tcs = ["#()", "#(1)", "#(2 3)", "#(3 #(4 5))",]
+    tcs.each { |src, expected|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::VectorNode, node
+      assert_equal :vector, node.type
     }
-    assert_expected(expected)
   end
 
-  def test_it_can_translate_literal_char
-    expected = {
-      "#\\a" => "Char.new(\"a\")",
-      "#\\space" => "Char.new(\" \")",
-      "#\\newline" => "Char.new(\"\n\")",
+  def test_it_can_parse_quoted_datum
+    tcs = ["\'1", "\'foo", "\'(1 2)",]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::QuotationNode, node
+      assert_equal :quotation, node.type
+      assert_equal "(quote #{src[1..-1]})", node.to_s
     }
-    assert_expected(expected)
   end
 
-  def test_it_can_translate_literal_string
-    expected = { '"hoge"' => '"hoge"', '"りすぷ"' => '"りすぷ"', }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_litral_number
-    expected = {
-      "123"         => "123",            # integer
-      Math::PI.to_s => Math::PI.to_s,    # real
-      "4/5"         => "Rational(4, 5)", # rational
-      "6+7i"        => "6+7i",           # complex
+  def test_it_can_parse_procedure_call
+    tcs = [
+      "(foo)",
+      "(bar 1)",
+      "(hoge 1 2)",
+      "(gebo 1 (boho 1 2 3))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::ProcedureCallNode, node
+      assert_equal :procedure_call, node.type
+      assert_equal src, node.to_s
     }
-    assert_expected(expected)
   end
 
-  def test_it_can_translate_op_proc_call
-    expected = {
-      "(+ 1 2)"    => "add(1, 2)",
-      "(- 3 4)"    => "subtract(3, 4)",
-      "(* 5 6)"    => "mul(5, 6)",
-      "(/ 7 8)"    => "div(7, 8)",
-      "(% 9 2)"    => "mod(9, 2)",
-      "(< 10 11)"  => "lt?(10, 11)",
-      "(<= 12 13)" => "le?(12, 13)",
-      "(> 14 15)"  => "gt?(14, 15)",
-      "(>= 16 17)" => "ge?(16, 17)",
-      "(= 18 19)"  => "eqv?(18, 19)",
+  def test_it_can_parse_lambda_expression
+    tcs = [
+      "(lambda (x y) (+ x y))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::LambdaExpressionNode, node
+      assert_equal :lambda_expression, node.type
+      assert_equal src, node.to_s
     }
-    assert_expected(expected)
   end
 
-  def test_it_can_translate_proc_call
-    expected = { "(fact-iter 5 1 1)" => "fact_iter(5, 1, 1)", }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_apply_lambda_exp
-    expected = {
-      "((lambda (x) (+ x 2)) 4)" => "lambda {|x| add(x, 2)}.call(4)",
+  def test_it_can_parse_conditional
+    tcs = [
+      "(if (= n 0) 1 (* n n))",
+      "(if (> n 1) (+ n 1))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::ConditionalNode, node
+      assert_equal :conditional, node.type
+      assert_equal src, node.to_s
     }
-    assert_expected(expected)
   end
 
-  def test_it_can_translate_lambda_exp
-    expected = {
-      "(lambda (x) (* x 2))" => "lambda {|x| mul(x, 2)}",
+  def test_it_can_parse_assignment
+    tcs = [
+      "(set! x 3)",
+      "(set! x (* 4 5))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::AssignmentNode, node
+      assert_equal :assignment, node.type
+      assert_equal src, node.to_s
     }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_if_exp
-    expected = {
-      "(if (= n 0) 1 (* n (- n 1)))" =>
-      "if eqv?(n, 0); 1; else; mul(n, subtract(n, 1)); end",
-      "(if (< 2 3) \"less\")" => "if lt?(2, 3); \"less\"; end",
-    }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_assignment_exp
-    expected = { "(set! x 2)" => "x = 2", }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_define_proc
-    expected = {
-      "(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))" =>
-      "def fact(n); if eqv?(n, 0); 1; else; mul(n, fact(subtract(n, 1))); end; end",
-    }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_cond_exp
-    expected = {
-      "(cond ((> 3 2) \"greater\") ((< 3 2) \"less\") (else \"equal\"))" =>
-      "if gt?(3, 2); \"greater\"; elsif lt?(3, 2); \"less\"; else; \"equal\"; end",
-    }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_let_exp
-    expected = {
-      "(let ((x 2) (y 3)) (* x y))" =>
-      "lambda {|x, y| mul(x, y)}.call(2, 3)",
-    }
-    assert_expected(expected)
-  end
-
-  def test_it_can_translate_multiple_expressions
-    expected = {
-      "(+ 1 2) (* 3 4)" => "add(1, 2)\nmul(3, 4)",
-    }
-    assert_expected(expected)
   end
 
   private
 
-  def assert_expected(expected)
-    expected.each { |k, v|
-      r_exp = @parser.parse(k)
-      assert_equal v, r_exp
+  def assert_simple_expression_type(tcs, klass, type)
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of klass, node
+      assert_equal type, node.type
+      assert_equal src, node.to_s
     }
   end
 

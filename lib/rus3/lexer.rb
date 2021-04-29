@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Rus3::Parser
+module Rus3
 
   class Lexer < Enumerator
 
@@ -14,29 +14,6 @@ module Rus3::Parser
       end
 
     end
-
-    TOKEN_TYPES = [             # :nodoc:
-      # delimiters
-      :lparen,                  # `(`
-      :rparen,                  # `)`
-      :dot,                     # `.`
-      :quotation,               # `'`
-      :vec_lparen,              # `#(`
-      # value types
-      :identifier,              # `foo`
-      :boolean,                 # `#f` or `#t` (`#false` or `#true`)
-      :number,                  # `123`, `456.789`, `1/2`, `3+4i`
-      :character,               # `#\a`
-      :string,                  # `"hoge"`
-      # operators
-      :op_proc,                 # `+`, `-`, ...
-      # control
-      :illegal,
-    ]
-
-    Token = Struct.new(:type, :literal) { # :nodoc:
-      alias :to_s :literal
-    }
 
     # :stopdoc:
 

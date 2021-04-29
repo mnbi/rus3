@@ -1,306 +1,309 @@
 # frozen_string_literal: true
 
-module Rus3::Procedure
-
-  module Predicate
-
-    include Rus3::EmptyList
-
-    # Returns true if the arguemnt represents a list structure.
-    # Note that an empty list is a list.
-    def list?(obj)
-      obj.instance_of?(Array)
-    end
-
-    # :stopdoc:
-
-    # Equivalence predicates:
-    #
-    # In R5RS, three equivalence predicates are defined such as eqv?,
-    # eq? and equal?.
-    #
-    # `equal?` has been defined in Object class and the reference
-    # manual says that this method must not re-defined.  So,
-    # `equal?` is not defined here.
-
-    # :startdoc:
-
-    def eqv?(obj1, obj2)
-      obj1 == obj2
-    end
-
-    def eq?(obj1, obj2)
-      obj1.equal?(obj2)
-    end
-
-    # :stopdoc:
-
-    # Value types:
-    #
-    # R5RS says "no objects satiscies more than one of the following
-    # predicates".  That is, Scheme has 9 value types at least.
-    #
-    # Most of them have suitable types in Ruby built-in classes.  Rus3
-    # provides some classes for the rest of them.
-    #
-    #   boolean? ---> FalseClass or TrueClass
-    #   pair? ------> Array (as a list) or Rus3::Pair (as a dotted pair)
-    #   symbol? ----> Symbol
-    #   number? ----> Numeric
-    #   char? ------> Rus3::Char
-    #   string? ----> String
-    #   vector? ----> Rus3::Vector
-    #   port? ------> Rus3::Port
-    #   procedure? -> Proc
-
-    # :startdoc:
-
-    def boolean?(obj)
-      obj.instance_of?(FalseClass) or obj.instance_of?(TrueClass)
-    end
-
-    def pair?(obj)
-      obj.instance_of?(Array) or obj.instance_of?(Rus3::Pair)
-    end
-
-    def symbol?(obj)
-      obj.instance_of?(Symbol) && obj != Rus3::UNDEF
-    end
-
-    def number?(obj)
-      obj.kind_of?(Numeric)
-    end
-
-    def char?(obj)
-      obj.instance_of?(Rus3::Char)
-    end
-
-    def string?(obj)
-      obj.kind_of?(String)
-    end
-
-    # procedure (R5RS/R7RS): (vector? obj)
-    def vector?(obj)
-      obj.instance_of?(Rus3::Vector)
-    end
-
-    def port?(obj)
-      false
-    end
-
-    def procedure?(obj)
-      obj.instance_of?(Proc)
-    end
-
-    # :startdoc:
-
-    # :stopdoc:
-
-    # Numeric types:
-    #
-    # Scheme has more predicates for number values.
-    #
-    #   complex
-    #   real
-    #   rational
-    #   integer
-    #
-    # R5RS says, "Mathematically, numbers may be arranged into a tower
-    # of subtypes in which each level is a subset of the level above
-    # it:"
-    #
-    # That is, {integer} < {rational} < {real} < {complex}.
+module Rus3
+  module Procedure
+
+    module Predicate
+
+      include Rus3::EmptyList
+
+      # Returns true if the arguemnt represents a list structure.
+      # Note that an empty list is a list.
+      def list?(obj)
+        obj.instance_of?(Array)
+      end
+
+      # :stopdoc:
+
+      # Equivalence predicates:
+      #
+      # In R5RS, three equivalence predicates are defined such as eqv?,
+      # eq? and equal?.
+      #
+      # `equal?` has been defined in Object class and the reference
+      # manual says that this method must not re-defined.  So,
+      # `equal?` is not defined here.
+
+      # :startdoc:
+
+      def eqv?(obj1, obj2)
+        obj1 == obj2
+      end
+
+      def eq?(obj1, obj2)
+        obj1.equal?(obj2)
+      end
+
+      # :stopdoc:
+
+      # Value types:
+      #
+      # R5RS says "no objects satiscies more than one of the following
+      # predicates".  That is, Scheme has 9 value types at least.
+      #
+      # Most of them have suitable types in Ruby built-in classes.  Rus3
+      # provides some classes for the rest of them.
+      #
+      #   boolean? ---> FalseClass or TrueClass
+      #   pair? ------> Array (as a list) or Rus3::Pair (as a dotted pair)
+      #   symbol? ----> Symbol
+      #   number? ----> Numeric
+      #   char? ------> Rus3::Char
+      #   string? ----> String
+      #   vector? ----> Rus3::Vector
+      #   port? ------> Rus3::Port
+      #   procedure? -> Proc
+
+      # :startdoc:
+
+      def boolean?(obj)
+        obj.instance_of?(FalseClass) or obj.instance_of?(TrueClass)
+      end
+
+      def pair?(obj)
+        obj.instance_of?(Array) or obj.instance_of?(Rus3::Pair)
+      end
+
+      def symbol?(obj)
+        obj.instance_of?(Symbol) && obj != Rus3::UNDEF
+      end
+
+      def number?(obj)
+        obj.kind_of?(Numeric)
+      end
+
+      def char?(obj)
+        obj.instance_of?(Rus3::Char)
+      end
+
+      def string?(obj)
+        obj.kind_of?(String)
+      end
+
+      # procedure (R5RS/R7RS): (vector? obj)
+      def vector?(obj)
+        obj.instance_of?(Rus3::Vector)
+      end
+
+      def port?(obj)
+        false
+      end
+
+      def procedure?(obj)
+        obj.instance_of?(Proc)
+      end
+
+      # :startdoc:
+
+      # :stopdoc:
+
+      # Numeric types:
+      #
+      # Scheme has more predicates for number values.
+      #
+      #   complex
+      #   real
+      #   rational
+      #   integer
+      #
+      # R5RS says, "Mathematically, numbers may be arranged into a tower
+      # of subtypes in which each level is a subset of the level above
+      # it:"
+      #
+      # That is, {integer} < {rational} < {real} < {complex}.
 
-    # :startdoc:
+      # :startdoc:
+
+      def complex?(num)
+        num.is_a?(Complex) || real?(num)
+      end
+
+      def real?(num)
+        num.is_a?(Float) || rational?(num)
+      end
+
+      def rational?(num)
+        num.is_a?(Rational) || integer?(num)
+      end
+
+      def integer?(num)
+        num.is_a?(Integer)
+      end
 
-    def complex?(num)
-      num.is_a?(Complex) || real?(num)
-    end
+      # :stopdoc:
 
-    def real?(num)
-      num.is_a?(Float) || rational?(num)
-    end
+      # Tests a number for a particular property.
 
-    def rational?(num)
-      num.is_a?(Rational) || integer?(num)
-    end
+      # :startdoc:
 
-    def integer?(num)
-      num.is_a?(Integer)
-    end
+      def zero?(z)
+        raise Rus3::NumberRequiredError, z unless number?(z)
+        z.zero?
+      end
 
-    # :stopdoc:
+      def positive?(r)
+        raise Rus3::RealNumberRequiredError, r unless real?(r)
+        r.positive?
+      end
 
-    # Tests a number for a particular property.
+      def negative?(r)
+        raise Rus3::RealNumberRequiredError, r unless real?(r)
+        r.negative?
+      end
 
-    # :startdoc:
+      def odd?(n)
+        raise Rus3::IntegerRequiredError, n unless integer?(n)
+        n.odd?
+      end
 
-    def zero?(z)
-      raise Rus3::NumberRequiredError, z unless number?(z)
-      z.zero?
-    end
+      def even?(n)
+        raise Rus3::IntegerRequiredError, n unless integer?(n)
+        n.even?
+      end
 
-    def positive?(r)
-      raise Rus3::RealNumberRequiredError, r unless real?(r)
-      r.positive?
-    end
+      # :stopdoc:
+
+      # Characters:
+
+      # :startdoc:
+
+      def char_eq?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :==)
+      end
+
+      def char_lt?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :<)
+      end
+
+      def char_gt?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :>)
+      end
+
+      def char_le?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :<=)
+      end
+
+      def char_ge?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :>=)
+      end
+
+      def char_ci_eq?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :==, ignore_case: true)
+      end
+
+      def char_ci_lt?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :<, ignore_case: true)
+      end
+
+      def char_ci_gt?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :>, ignore_case: true)
+      end
+
+      def char_ci_le?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :<=, ignore_case: true)
+      end
+
+      def char_ci_ge?(char1, char2)
+        Rus3::Char.compare_chars(char1, char2, :>=, ignore_case: true)
+      end
 
-    def negative?(r)
-      raise Rus3::RealNumberRequiredError, r unless real?(r)
-      r.negative?
-    end
+      def char_alphabetic?(char)
+        Rus3::Char.alphabetic?(char)
+      end
 
-    def odd?(n)
-      raise Rus3::IntegerRequiredError, n unless integer?(n)
-      n.odd?
-    end
+      def char_numeric?(char)
+        Rus3::Char.numeric?(char)
+      end
 
-    def even?(n)
-      raise Rus3::IntegerRequiredError, n unless integer?(n)
-      n.even?
-    end
+      def char_whitespace?(char)
+        Rus3::Char.whitespace?(char)
+      end
 
-    # :stopdoc:
-
-    # Characters:
-
-    # :startdoc:
-
-    def char_eq?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :==)
-    end
-
-    def char_lt?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :<)
-    end
-
-    def char_gt?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :>)
-    end
-
-    def char_le?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :<=)
-    end
-
-    def char_ge?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :>=)
-    end
-
-    def char_ci_eq?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :==, ignore_case: true)
-    end
-
-    def char_ci_lt?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :<, ignore_case: true)
-    end
-
-    def char_ci_gt?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :>, ignore_case: true)
-    end
-
-    def char_ci_le?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :<=, ignore_case: true)
-    end
-
-    def char_ci_ge?(char1, char2)
-      Rus3::Char.compare_chars(char1, char2, :>=, ignore_case: true)
-    end
-
-    def char_alphabetic?(char)
-      Rus3::Char.alphabetic?(char)
-    end
-
-    def char_numeric?(char)
-      Rus3::Char.numeric?(char)
-    end
-
-    def char_whitespace?(char)
-      Rus3::Char.whitespace?(char)
-    end
-
-    def char_upper_case?(letter)
-      Rus3::Char.upper_case?(letter)
-    end
-
-    def char_lower_case?(letter)
-      Rus3::Char.lower_case?(letter)
-    end
-
-    # :stopdoc:
-
-    # Strings:
-
-    # :startdoc:
-
-    def check_string(*objs)
-      objs.each { |obj|
-        raise Rus3::StringRequiredError, obj unless string?(obj)
-      }
-    end
-    private :check_string
-
-    def string_eq?(str1, str2)
-      check_string(str1, str2)
-      str1 == str2
-    end
-
-    def string_ci_eq?(str1, str2)
-      check_string(str1, str2)
-      str1.downcase == str2.downcase
-    end
-
-    def string_lt?(str1, str2)
-      check_string(str1, str2)
-      str1 < str2
-    end
-
-    def string_gt?(str1, str2)
-      check_string(str1, str2)
-      str1 > str2
-    end
-
-    def string_le?(str1, str2)
-      check_string(str1, str2)
-      str1 <= str2
-    end
-
-    def string_ge?(str1, str2)
-      check_string(str1, str2)
-      str1 >= str2
-    end
-
-    def string_ci_lt?(str1, str2)
-      check_string(str1, str2)
-      str1.downcase < str2.downcase
-    end
-
-    def string_ci_gt?(str1, str2)
-      check_string(str1, str2)
-      str1.downcase > str2.downcase
-    end
-
-    def string_ci_le?(str1, str2)
-      check_string(str1, str2)
-      str1.downcase <= str2.downcase
-    end
-
-    def string_ci_ge?(str1, str2)
-      check_string(str1, str2)
-      str1.downcase >= str2.downcase
-    end
-
-    # :stopdoc:
-
-    # Ports:
-
-    # :startdoc:
-
-    def input_port?(obj)
-      false
-    end
-
-    def output_port?(obj)
-      false
+      def char_upper_case?(letter)
+        Rus3::Char.upper_case?(letter)
+      end
+
+      def char_lower_case?(letter)
+        Rus3::Char.lower_case?(letter)
+      end
+
+      # :stopdoc:
+
+      # Strings:
+
+      # :startdoc:
+
+      def check_string(*objs)
+        objs.each { |obj|
+          raise Rus3::StringRequiredError, obj unless string?(obj)
+        }
+      end
+      private :check_string
+
+      def string_eq?(str1, str2)
+        check_string(str1, str2)
+        str1 == str2
+      end
+
+      def string_ci_eq?(str1, str2)
+        check_string(str1, str2)
+        str1.downcase == str2.downcase
+      end
+
+      def string_lt?(str1, str2)
+        check_string(str1, str2)
+        str1 < str2
+      end
+
+      def string_gt?(str1, str2)
+        check_string(str1, str2)
+        str1 > str2
+      end
+
+      def string_le?(str1, str2)
+        check_string(str1, str2)
+        str1 <= str2
+      end
+
+      def string_ge?(str1, str2)
+        check_string(str1, str2)
+        str1 >= str2
+      end
+
+      def string_ci_lt?(str1, str2)
+        check_string(str1, str2)
+        str1.downcase < str2.downcase
+      end
+
+      def string_ci_gt?(str1, str2)
+        check_string(str1, str2)
+        str1.downcase > str2.downcase
+      end
+
+      def string_ci_le?(str1, str2)
+        check_string(str1, str2)
+        str1.downcase <= str2.downcase
+      end
+
+      def string_ci_ge?(str1, str2)
+        check_string(str1, str2)
+        str1.downcase >= str2.downcase
+      end
+
+      # :stopdoc:
+
+      # Ports:
+
+      # :startdoc:
+
+      def input_port?(obj)
+        false
+      end
+
+      def output_port?(obj)
+        false
+      end
+
     end
 
   end

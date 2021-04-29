@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class Rus3ParserLexerTest < Minitest::Test
+class Rus3LexerTest < Minitest::Test
 
   # boolean
 
@@ -20,19 +20,14 @@ class Rus3ParserLexerTest < Minitest::Test
 
   def test_it_can_detect_identifier
     tcs = ["foo", "bar", "hoge"]
-    assert_token_type(tcs, :ident)
-  end
-
-  def test_it_can_distinguish_keyword
-    tcs = ["if", "define"]
-    refute_token_type(tcs, :ident)
+    assert_token_type(tcs, :identifier)
   end
 
   # char
 
   def test_it_can_detect_char
     tcs = ["#\\a", "#\\space", "#\\newline"]
-    assert_token_type(tcs, :char)
+    assert_token_type(tcs, :character)
   end
 
   # string
@@ -73,18 +68,18 @@ class Rus3ParserLexerTest < Minitest::Test
 
   def test_it_can_detect_keyword_if
     tcs = ["if"]
-    assert_token_type(tcs, :if)
+    assert_token_type(tcs, :identifier)
   end
 
   def test_it_can_detect_keyword_define
     tcs = ["define"]
-    assert_token_type(tcs, :define)
+    assert_token_type(tcs, :identifier)
   end
 
   # parenthesis
 
   def test_it_can_detect_lparen
-    l = Rus3::Parser::Lexer.new("(")
+    l = Rus3::Lexer.new("(")
     token = l.next
 
     assert_equal :lparen, token.type
@@ -92,7 +87,7 @@ class Rus3ParserLexerTest < Minitest::Test
   end
 
   def test_it_can_detect_rparen
-    l = Rus3::Parser::Lexer.new(")")
+    l = Rus3::Lexer.new(")")
     token = l.next
 
     assert_equal :rparen, token.type
@@ -102,7 +97,7 @@ class Rus3ParserLexerTest < Minitest::Test
   # vector litral
 
   def test_it_can_detect_vector_lpraen
-    l = Rus3::Parser::Lexer.new("#(")
+    l = Rus3::Lexer.new("#(")
     token = l.next
 
     assert_equal :vec_lparen, token.type
@@ -114,62 +109,52 @@ class Rus3ParserLexerTest < Minitest::Test
   def test_it_can_detect_tokens_properly
     input = "(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))"
     expected_tokens = [
-      :lparen,
-      :define,
-      :lparen,
-      :ident,   # fact
-      :ident,   # n
-      :rparen,
-      :lparen,
-      :if,
-      :lparen,
-      :op_proc, # =
-      :ident,   # n
-      :number,  # 0
-      :rparen,
-      :number,  # 1
-      :lparen,
-      :op_proc, # *
-      :ident,   # n
-      :lparen,
-      :ident,   # fact
-      :lparen,
-      :op_proc, # -
-      :ident,   # n
-      :number,  # 1
-      :rparen,
-      :rparen,
-      :rparen,
-      :rparen,
-      :rparen,
+      :lparen,                  # [
+      :identifier,              # define
+      #
+      :lparen,                  # [
+      :identifier,              # fact
+      #
+      :identifier,              # n
+      :rparen,                  # ]
+      #
+      :lparen,                  # [
+      :identifier,              # if
+      #
+      :lparen,                  # [
+      :op_proc,                 # =
+      #
+      :identifier,              # n
+      #
+      :number,                  # 0
+      :rparen,                  # ]
+      #
+      :number,                  # 1
+      #
+      :lparen,                  # [
+      :op_proc,                 # *
+      #
+      :identifier,              # n
+      #
+      :lparen,                  # [
+      :identifier,              # fact
+      #
+      :lparen,                  # [
+      :op_proc,                 # -
+      #
+      :identifier,              # n
+      #
+      :number,                  # 1
+      :rparen,                  # ]
+      :rparen,                  # ]
+      :rparen,                  # ]
+      :rparen,                  # ]
+      :rparen,                  # ]
     ]
-    l = Rus3::Parser::Lexer.new(input)
+    l = Rus3::Lexer.new(input)
     expected_tokens.each { |expected|
       token = l.next
       assert_equal expected, token.type
-    }
-  end
-
-  # replace extended characters
-
-  def test_it_can_convert_comparison_chars
-    test_cases = {
-      "char=?" => "char_eq?",
-      "char<?" => "char_lt?",
-      "char>?" => "char_gt?",
-      "char<=?" => "char_le?",
-      "char>=?" => "char_ge?",
-      "char-ci=?" => "char_ci_eq?",
-      "char-ci<?" => "char_ci_lt?",
-      "char-ci>?" => "char_ci_gt?",
-      "char-ci<=?" => "char_ci_le?",
-      "char-ci>=?" => "char_ci_ge?",
-    }
-    test_cases.each { |input, expected|
-      l = Rus3::Parser::Lexer.new(input)
-      token = l.next
-      assert_equal :ident, token.type
-      assert_equal expected, token.literal
     }
   end
 
@@ -177,7 +162,7 @@ class Rus3ParserLexerTest < Minitest::Test
 
   def assert_token_type(test_cases, expected_type)
     test_cases.each { |input|
-      l = Rus3::Parser::Lexer.new(input)
+      l = Rus3::Lexer.new(input)
       token = l.next
       assert_equal expected_type, token.type
       assert_equal input.rstrip.lstrip, token.literal
@@ -186,7 +171,7 @@ class Rus3ParserLexerTest < Minitest::Test
 
   def refute_token_type(test_cases, expected_type)
     test_cases.each { |input|
-      l = Rus3::Parser::Lexer.new(input)
+      l = Rus3::Lexer.new(input)
       token = l.next
       refute_equal expected_type, token.type
       assert_equal input.rstrip.lstrip, token.literal
