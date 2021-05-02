@@ -137,14 +137,19 @@ module Rus3
       #   <lambda expression> |
       #   <conditional> |
       #   <assignment> |
-      #   <derived expression> |
       #   <macro use> |
       #   <macro block> |
+      #   <definition> |
+      #   <derived expression> |
       #   <includer>
       def parse_list_expression
         node = nil
         next_token        # read :lparen
         case peek_token.type
+        when :rparen
+          # an empty list
+          node = Rus3::AST.instantiate(:list)
+          next_token            # skip :rparen
         when :identifier
           case peek_token.literal
           when "lambda"           # lambda expression
@@ -155,6 +160,8 @@ module Rus3
             node = parse_assignment
           when "let-syntax", "letrec-syntax" # macro block
             node = parse_macro_block
+          when "define", "define-syntax", "define-values", "define-record-type", "begin"
+            node = parse_definition
           else
             node = parse_derived_expression
             node = parse_macro_use if node.nil?
@@ -277,6 +284,154 @@ module Rus3
         nil
       end
 
+      # <definition> -> ( define <identifier> <expression> ) |
+      #   ( define ( <identifier> <def formals> ) <body> ) |
+      #   <syntax definition> |
+      #   ( define-values <formals> <body> ) |
+      #   ( define-record-type <identifier>
+      #                        <constructor> <identifier> <field spec>* ) |
+      #   ( begin <definition>* )
+      #
+      # <def formals> -> <identifier>* |
+      #   <identifier>* . <identifier>
+      # <constructor> -> ( <identifier> <field name>* )
+      # <field spec> -> ( <field name> <accessor> ) |
+      #   ( <field name> <accessor> <mutator> )
+      # <field name> -> <identifier>
+      # <accessor> -> <identifier>
+      # <mutator> -> <identifier>
+      # <syntax definition> -> ( define-syntax <keyword> <transformer spec> )
+      # <transformer spec> -> ...
+      #  :
+      def parse_definition
+        case peek_token.literal
+        when "define"
+          parse_identifier_definition
+        when "define-syntax"
+          nil                   # not implemented yet
+        when "define-values"
+          nil                   # not implemented yet
+        when "define-record-type"
+          nil                   # not implemented yet
+        when "begin"
+          nil                   # not implemented yet
+        else
+          raise Rus3::SchemeSynaxError, token.to_a
+        end
+      end
+
+      # ( define <identifier> <expression> )
+      # ( define ( <identifier> <def formals> ) <body> )
+      #
+      #   ( define foo 3 )
+      #   ( define bar ( lambda ( x y ) ( + x y )))
+      #   ( deifne ( hoge n m ) ( * n m ))
+
+      def parse_identifier_definition
+        token = next_token      # define
+        define_node = Rus3::AST.instantiate(:identifier_definition, token.literal)
+        case peek_token.type
+        when :lparen
+          next_token            # skip :lparen
+          # procedure name
+          define_node.identifier = parse_identifier
+
+          def_formals = Rus3::AST.instantiate(:list)
+          Kernel.loop {
+            if peek_token.type == :rparen
+              next_token
+              break
+            end
+            def_formals << parse_identifier
+          }
+
+          lambda_node = Rus3::AST.instantiate(:lambda_expression, nil)
+          lambda_node.formals = def_formals
+          lambda_node.body = read_body
+          next_token            # skip :rparen
+
+          define_node.expression = lambda_node
+        when :identifier
+          define_node.identifier = parse_identifier
+          define_node.expression = parse_expression
+          next_token
+        else
+          raise Rus3::SchemeSynaxError, current_token.to_a
+        end
+        define_node
+      end
+
+      # <quotation> -> '<datum> | ( quote <datum> )
+      def parse_quotation
+        token = next_token
+        quote_node = Rus3::AST.instantiate(:quotation, token.literal)
+        quote_node << parse_datum
+        quote_node
+      end
+
+      # <vetor> -> #( <datum>* )
+      def parse_vector
+        parse_data_to_rparen
+      end
+
+      def parse_data_to_rparen
+        token = next_token
+        ast_type = nil
+        case token.type
+        when :lparen
+          ast_type = :list
+        when :vec_lparen
+          ast_type = :vector
+        else
+          ast_type = :list
+        end
+        node = Rus3::AST.instantiate(ast_type, nil)
+        raise Rus3::SchemeSyntaxError, token.to_a unless node.branch?
+        Kernel.loop {
+          token = peek_token
+          break if token.type == :rparen
+          node << parse_datum
+        }
+        next_token                # skip :rparen
+        node
+      end
+
+      # <datum> -> <simple datum> | <compound datum>
+      def parse_datum
+        if start_delimiter?(peek_token)
+          parse_compound_datum
+        else
+          parse_simple_datum
+        end
+      end
+
+      # <simple datum> -> <boolean> | <number> | <character> |
+      #     <string> | <symbol>
+      # <symbol> -> <identifier>
+      #
+      # See `parse_simple_expression`.
+      def parse_simple_datum
+        parse_simple_expression
+      end
+
+      # <compound datum> -> <list> | <vector> | <bytevector> | <abbreviation>
+      # <abbreviation> -> <abbrev prefix> <datum>
+      def parse_compound_datum
+        case peek_token.type
+        when :lparen
+          parse_list
+        when :vec_lparen
+          parse_vector
+        else
+          raise Rus3::SchemeSyntaxError, peek_token.to_a
+        end
+      end
+
+      # <list> -> ( <datum>* ) | ( <datum>+ . <datum> )
+      def parse_list
+        parse_data_to_rparen
+      end
+
       DERIVED_IDENTIFIERS = [
         "cond", "case", "and", "or", "when", "unless",
         "let", "let*", "letrec", "letrec*",
@@ -344,10 +499,45 @@ module Rus3
 
       # ( cond <cond clause>+ )
       # ( cond <cond cluase>* ( else <sequence> ) )
-      #
-      # <cond clause> -> ( ( <datum>* ) <sequence> )
       def parse_cond
-        not_implemented_yet("cond")
+        cond_node = Rus3::AST.instantiate(:cond, current_token.literal)
+        next_token              # skip "cond"
+
+        Kernel.loop {
+          if peek_token.type == :rparen
+            next_token          # skip :rparen
+            break
+          end
+          cond_node.add_clause(parse_cond_clause)
+        }
+        cond_node
+      end
+
+      # <cond cluase> -> ( <test> <sequence> ) |
+      #   ( <test> ) |
+      #   ( <test> => <recipient> )
+      # <test> -> <expression>
+      # <recipient> -> <expression>
+      # <sequence> -> <command>* <expression>
+      # <command> -> <expression>
+      def parse_cond_clause
+        clause_node = Rus3::AST.instantiate(:list)
+
+        test_node = parse_test
+        clause_node << test_node
+
+        Kernel.loop {
+          if peek_token.type == :rparen
+            next_token
+            break
+          end
+          clause_node << parse_expression
+        }
+        clause_node
+      end
+
+      def prase_test
+        parse_expression
       end
 
       def parse_case
@@ -424,77 +614,6 @@ module Rus3
 
       def parse_quasiquotation
         nil
-      end
-
-      # <quotation> -> '<datum> | ( quote <datum> )
-      def parse_quotation
-        token = next_token
-        quote_node = Rus3::AST.instantiate(:quotation, token.literal)
-        quote_node << parse_datum
-        quote_node
-      end
-
-      # <vetor> -> #( <datum>* )
-      def parse_vector
-        parse_data_to_rparen
-      end
-
-      def parse_data_to_rparen
-        token = next_token
-        ast_type = nil
-        case token.type
-        when :lparen
-          ast_type = :list
-        when :vec_lparen
-          ast_type = :vector
-        else
-          ast_type = :list
-        end
-        node = Rus3::AST.instantiate(ast_type, nil)
-        raise Rus3::SchemeSyntaxError, token.to_a unless node.branch?
-        Kernel.loop {
-          token = peek_token
-          break if token.type == :rparen
-          node << parse_datum
-        }
-        next_token                # skip :rparen
-        node
-      end
-
-      # <datum> -> <simple datum> | <compound datum>
-      def parse_datum
-        if start_delimiter?(peek_token)
-          parse_compound_datum
-        else
-          parse_simple_datum
-        end
-      end
-
-      # <simple datum> -> <boolean> | <number> | <character> |
-      #     <string> | <symbol>
-      # <symbol> -> <identifier>
-      #
-      # See `parse_simple_expression`.
-      def parse_simple_datum
-        Rus3::AST.instantiate(*next_token)
-      end
-
-      # <compound datum> -> <list> | <vector> | <bytevector> | <abbreviation>
-      # <abbreviation> -> <abbrev prefix> <datum>
-      def parse_compound_datum
-        case peek_token.type
-        when :lparen
-          parse_list
-        when :vec_lparen
-          parse_vector
-        else
-          raise Rus3::SchemeSyntaxError, peek_token.to_a
-        end
-      end
-
-      # <list> -> ( <datum>* ) | ( <datum>+ . <datum> )
-      def parse_list
-        parse_data_to_rparen
       end
 
       # :startdoc:

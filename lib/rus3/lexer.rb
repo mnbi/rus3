@@ -22,7 +22,6 @@ module Rus3
 
     # idents
     EXTENDED_CHARS = "!\\$%&\\*\\+\\-\\./:<=>\\?@\\^_~"
-    EXTENDED_REGEXP = Regexp.new("[#{EXTENDED_CHARS}]")
     IDENT_PAT  = "[a-zA-Z_][a-zA-Z0-9#{EXTENDED_CHARS}]*"
     IDENTIFIER = Regexp.new("\\A#{IDENT_PAT}\\Z")
 

@@ -25,16 +25,21 @@ module Rus3
         @translator.add_procedure_map(INFIX_OPS_MAP)
       end
 
+      def verbose=(verbose)
+        super
+        @translator and @translator.verbose = verbose
+      end
+
+      def instance_variable_set(var, value)
+        @env.binding.receiver.instance_variable_set(var, value)
+      end
+
       def instance_eval(&proc)
-        if proc
-          @env.binding.receiver.instance_eval(&proc)
-        else
-          super
-        end
+        @env.binding.receiver.instance_eval(&proc)
       end
 
       def eval(ast)
-        ruby_source = ast.map { |node| @translator.translate(node) }.join("\n")
+        ruby_source = translate_ast(ast)
         pp ruby_source if @verbose
         @env.binding.eval(ruby_source)
       end
@@ -43,20 +48,24 @@ module Rus3
         @env.binding
       end
 
+      INFIX_OPS_MAP = {
+        "+"  => "add",
+        "-"  => "subtract",
+        "*"  => "mul",
+        "/"  => "div",
+        "%"  => "mod",
+        "<"  => "lt?",
+        "<=" => "le?",
+        ">"  => "gt?",
+        ">=" => "ge?",
+        "==" => "eqv?",
+      }
+
       private
 
-      INFIX_OPS_MAP = {
-        :+  => :add,
-        :-  => :subtract,
-        :*  => :mul,
-        :/  => :div,
-        :%  => :mod,
-        :<  => :lt?,
-        :<= => :le?,
-        :>  => :gt?,
-        :>= => :ge?,
-        :== => :eqv?,
-      }
+      def translate_ast(ast)
+        ast.map{|node| @translator.translate(node)}.join("\n")
+      end
 
       def define_procs_for_infix_ops
         r = @env.binding.receiver

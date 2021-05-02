@@ -11,10 +11,14 @@ module Rus3
     # An evaluator.
     class Evaluator
 
-      attr_accessor :verbose
+      attr_reader :verbose
 
       def initialize
         @verbose = false
+      end
+
+      def verbose=(verbose)
+        @verbose = verbose
       end
 
       def instance_eval(&proc)
@@ -43,7 +47,7 @@ module Rus3
             pp node
           }
         end
-        ast.join(" ")
+        ast.to_s
       end
 
     end

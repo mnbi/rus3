@@ -218,13 +218,72 @@ module Rus3
       end
     end
 
-    class AndNode < ListNode
+    class IdentifierDefinitionNode < ListNode
       def initialize(_ = nil)
-        super("and")
+        super("define", 3)
       end
 
       def type
-        :and
+        :identifier_definition
+      end
+
+      def identifier
+        @nodes[1]
+      end
+
+      def identifier=(node)
+        @nodes[1] = node
+      end
+
+      def expression
+        @nodes[2]
+      end
+
+      def expression=(node)
+        @nodes[2] = node
+      end
+
+      def def_formals
+        if lambda?
+          expression.formals
+        else
+          nil
+        end
+      end
+
+      def body
+        if lambda?
+          expression.body
+        else
+          nil
+        end
+      end
+
+      private
+
+      def lambda?
+        expression.type == :lambda_expression
+      end
+
+    end
+
+    class SyntaxDefinitionNode < ListNode
+      def type
+        :syntax_definition
+      end
+
+    end
+
+    class ValuesDefinitionNode < ListNode
+      def type
+        :values_definition
+      end
+
+    end
+
+    class RecordTypeDefinitionNode < ListNode
+      def type
+        :record_type_definition
       end
 
     end
@@ -236,6 +295,31 @@ module Rus3
 
       def type
         :macro_block
+      end
+
+    end
+
+    class CondNode < ListNode
+      def initialize(_ = nil)
+        super("cond")
+      end
+
+      def cond_clauses
+        @nodes[1..-1]
+      end
+
+      def add_clause(node)
+        @nodes << node
+      end
+    end
+
+    class AndNode < ListNode
+      def initialize(_ = nil)
+        super("and")
+      end
+
+      def type
+        :and
       end
 
     end

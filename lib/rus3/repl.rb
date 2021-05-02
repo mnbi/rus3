@@ -217,14 +217,20 @@ HELP
     def define_load_feature
       return if @evaluator.nil?
 
-      @evaluator.instance_variable_set(:@scm_parser, Parser::SchemeParser.new)
+      @evaluator.instance_variable_set(:@scm_parser, @parser)
+      @evaluator.instance_variable_set(:@scm_evaluator, @evaluator)
       @evaluator.instance_eval {
         def load_scm(path)
           raise Rus3::CannotFindFileError, path unless FileTest.exist?(path)
-          scheme_source = nil
-          File.open(path, "r") {|f| scheme_source = f.readlines(chomp: true)}
-          ast = @scm_parser.parse(scheme_source.join(" "))
-          self.binding.eval(ast)
+          scheme_source = File.readlines(path, chomp: true).join(" ")
+          result = ast = nil
+          if @scm_parser.respond_to?(:parse)
+            ast = @scm_parser.parse(scheme_source)
+          end
+          if @scm_evaluator.respond_to?(:eval)
+            result = @scm_evaluator.eval(ast)
+          end
+          pp result
         end
       }
     end

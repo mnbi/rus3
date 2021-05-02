@@ -58,7 +58,7 @@ module Rus3
       def instantiate(ast_type, literal = nil)
         klass_name = Utils.camel_case(ast_type) + "Node"
         klass = AST.const_get(klass_name)
-        if klass.nil?
+        if klass.nil? or klass == IllegalNode
           IllegalNode.new(ast_type, literal)
         else
           klass.new(literal)
