@@ -454,6 +454,7 @@ module Rus3
       #   ( when <test> <sequence> ) |
       #   ( unless <test> <sequence> ) |
       #   ( let ( <binding spec>* ) <body> ) |
+      #   ( let <identifier> ( <binding spec>* ) <body> ) |
       #   ( let* ( <binding spec>* ) <body> ) |
       #   ( letrec ( <binding spec>* ) <body> ) |
       #   ( letrec* ( <binding spec>* ) <body> ) |
@@ -559,8 +560,42 @@ module Rus3
         not_implemented_yet("unless")
       end
 
+      # ( let ( <binding spec>* ) <body> ) |
+      # <bind spec> -> ( <identifier> <expression> )
+      #
+      # `Named let` has not supported yet.
+      #   ( let <identifier> ( <binding spec>* ) <body> )
       def parse_let
-        not_implemented_yet("let")
+        let_node = Rus3::AST.instantiate(:let, current_token.literal)
+
+        let_node.bind_specs = parse_bind_specs
+        let_node.body = read_body
+        next_token            # skip :rparen
+
+        let_node
+      end
+
+      def parse_bind_specs
+        specs_node = Rus3::AST.instantiate(:list)
+        next_token              # skip :lparen
+
+        Kernel.loop {
+          if peek_token.type == :rparen
+            next_token          # skip :rparen
+            break
+          end
+          specs_node << parse_bind_spec
+        }
+        specs_node
+      end
+
+      def parse_bind_spec
+        spec_node = Rus3::AST::instantiate(:bind_spec)
+        next_token              # skip :lpraren
+        spec_node.identifier = parse_identifier
+        spec_node.expression = parse_expression
+        next_token              # skip :rparen
+        spec_node
       end
 
       def parse_let_star

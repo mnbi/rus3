@@ -9,15 +9,12 @@ module Rus3
     class Translator
       TRANSLATOR_VERSION = "0.1.0"
 
-      def initialize
-        @verbose = false
-      end
-
       def version
         "(scheme-ruby-translator :version #{TRANSLATOR_VERSION})"
       end
 
       def initialize
+        @verbose = false
         @procedure_map = {}
       end
 
@@ -229,6 +226,20 @@ module Rus3
         test_src = translate(ast_node.test)
         exps_src = ast_node.sequence.map{|e| translate(e)}.join(";")
         "#{test_src}; #{exps_src}"
+      end
+
+      def translate_let(ast_node)
+        formals = []
+        args = []
+
+        ast_node.bind_specs.each { |spec|
+          formals << translate_identifier(spec.identifier)
+          args << translate(spec.expression)
+        }
+
+        body = translate_body(ast_node)
+
+        "lambda{|#{formals.join(', ')}| #{body}}.call(#{args.join(', ')})"
       end
 
       RB_KEYWORDS_MAP = {

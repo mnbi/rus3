@@ -343,6 +343,60 @@ module Rus3
       end
     end
 
+    class LetNode < ListNode
+      def initialize(_ = nil)
+        super("let", 2)
+      end
+
+      def type
+        :let
+      end
+
+      def bind_specs
+        @nodes[1]
+      end
+
+      def bind_specs=(node)
+        @nodes[1] = node
+      end
+
+      def body
+        @nodes[2..-1]
+      end
+
+      def body=(nodes)
+        nodes.each_with_index { |node, i|
+          @nodes[i + 2] = node
+        }
+      end
+    end
+
+    class BindSpecNode < ListNode
+      def initialize(_ = nil)
+        super(nil, 2)
+      end
+
+      def type
+        :bind_spec
+      end
+
+      def identifier
+        @nodes[1]
+      end
+
+      def identifier=(node)
+        @nodes[1] = node
+      end
+
+      def expression
+        @nodes[2]
+      end
+
+      def expression=(node)
+        @nodes[2] = node
+      end
+    end
+
     class AndNode < ListNode
       def initialize(_ = nil)
         super("and")

@@ -5,7 +5,7 @@ module Rus3
   module Evaluator
 
     class SchemeEvaluator < Evaluator
-      EVALUATOR_VERSION = "0.1.0"
+      EVALUATOR_VERSION = "0.2.0"
 
       def version
         vmsg = "(scheme-evaluator :version #{EVALUATOR_VERSION})"
