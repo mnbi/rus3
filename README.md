@@ -17,12 +17,7 @@ You can start the Rus3 REPL with the command, `rus3`.
 
 ``` scheme
 > rus3
-A simple REPL for Rus3:
-- Rus3 version: 0.1.0
-  - REPL version: 0.1.0
-    - Parser version 0.1.0 ((scheme-parser-version . 0.1.0) (scheme-lexer-version . 0.1.0))
-    - Evaluator version: 0.1.0
-    - using built-in PRINTER
+A simple REPL to run Rus3:
 Rus3(scheme)>
 ```
 
@@ -31,6 +26,19 @@ Rus3(scheme)>
 In the REPL, you can enter Scheme expressions.  The REPL reads your
 Scheme expressions, translates it to Ruby expressions, and
 evaluated them.  Then, the REPL prints the result after `==> `.
+
+If you want to run verbosely, use "-d" (or "--debug") option, then it
+will become very verbose:
+
+``` scheme
+A simple REPL to run Rus3:
+(rus3 :version 0.2.0 :release 2021-05-02
+  (repl :version 0.2.0
+    (parser-module :version 0.2.0 ((scheme-parser :version 0.2.0) (scheme-lexer :version 0.2.0)))
+    (evaluator-module version: 0.2.0 ((scheme-evaluator :version 0.2.0) (scheme-ruby-translator :version 0.1.0)))
+    (:using :built-in :printer)))
+Rus3(scheme)>
+```
 
 ### Literal of Scheme values
 

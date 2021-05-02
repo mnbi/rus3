@@ -1,30 +1,34 @@
 # frozen_string_literal: true
 
-module Rus3::Procedure
-  module Char
+module Rus3
+  module Procedure
 
-    #   - procedure (R5RS): (char->integer char)
+    module Char
 
-    def char_to_integer(char)
-      Rus3::Char.char_to_integer(char)
-    end
+      #   - procedure (R5RS): (char->integer char)
 
-    #   - procedure (R5RS): (integer->char n)
+      def char_to_integer(char)
+        Rus3::Char.char_to_integer(char)
+      end
 
-    def integer_to_char(n)
-      Rus3::Char.integer_to_char(n)
-    end
+      #   - procedure (R5RS): (integer->char n)
 
-    #   - library procedure (R5RS): (char-upcase char)
+      def integer_to_char(n)
+        Rus3::Char.integer_to_char(n)
+      end
 
-    def char_upcase(char)
-      Rus3::Char.upcase(char)
-    end
+      #   - library procedure (R5RS): (char-upcase char)
 
-    #   - library procedure (R5RS): (char-downcase char)
+      def char_upcase(char)
+        Rus3::Char.upcase(char)
+      end
 
-    def char_downcase(char)
-      Rus3::Char.downcase(char)
+      #   - library procedure (R5RS): (char-downcase char)
+
+      def char_downcase(char)
+        Rus3::Char.downcase(char)
+      end
+
     end
 
   end

@@ -2,76 +2,60 @@
 
 module Rus3
 
-  # An evaluator.
+  module Evaluator
+    require_relative "evaluator/environment"
 
-  class Evaluator
+    # Indicates the version of the evaluator module.
+    VERSION = "0.2.0"
 
-    # Indicates the version of the evaluator class.
-    VERSION = "0.1.0"
+    # An evaluator.
+    class Evaluator
 
-    include EmptyList
-
-    class Environment
-      include Rus3::Procedure::Control
-      include Rus3::Procedure::Write
-      include Rus3::Procedure::Vector
-      include Rus3::Procedure::List
-      include Rus3::Procedure::Char
-      include Rus3::Procedure::Predicate
-      include Rus3::EmptyList
-
-      attr_reader :binding
+      attr_reader :verbose
 
       def initialize
-        @binding = Kernel.binding
+        @verbose = false
+      end
+
+      def verbose=(verbose)
+        @verbose = verbose
+      end
+
+      def instance_eval(&proc)
+        super
+      end
+
+      def eval(ast); nil; end
+
+      def version
+        "evaluator-module version: #{VERSION}"
       end
 
     end
 
-    attr_accessor :verbose
+    class PassthroughEvaluator < Evaluator
+      EVALUATOR_VERSION = "0.1.0"
 
-    attr_reader :environment
+      def version
+        super + " (pass-through-evaluator version: #{EVALUATOR_VERSION})"
+      end
 
-    def initialize
-      @verbose = false
-      @env = Environment.new
-      define_procs_for_infix_ops
+      def eval(ast)
+        if @verbose
+          ast.each { |node|
+            print "  evaluator(pass-through): "
+            pp node
+          }
+        end
+        ast.to_s
+      end
+
     end
 
-    def eval(exp)
-      pp exp if @verbose
-      @env.binding.eval(exp)
-    end
+    require_relative "evaluator/scheme_evaluator"
+    require_relative "evaluator/translator"
 
-    def binding
-      @env.binding
-    end
-
-    def version
-      "Evaluator version: #{VERSION}"
-    end
-
-    private
-
-    INFIX_OPS = {
-      :+  => :add,
-      :-  => :subtract,
-      :*  => :mul,
-      :/  => :div,
-      :%  => :mod,
-      :<  => :lt?,
-      :<= => :le?,
-      :>  => :gt?,
-      :>= => :ge?,
-      :== => :eqv?,
-    }
-
-    def define_procs_for_infix_ops
-      r = @env.binding.receiver
-      INFIX_OPS.each { |op, proc_name|
-        r.instance_eval("def #{proc_name}(op1, op2); op1 #{op} op2; end")
-      }
-    end
+    DEFAULT_EVALUATOR = SchemeEvaluator # :nodoc:
 
   end
 end
