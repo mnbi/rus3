@@ -63,7 +63,7 @@ module Rus3
         }
       end
 
-      S2R_MAP = { "(" => "[ ", ")" => " ]", "'" => "' " } # :nodoc:
+      S2R_MAP = { "(" => " [ ", ")" => " ] ", "'" => " ' " } # :nodoc:
 
       def tokenize(exp)
         source = exp.gsub(/[()']/, S2R_MAP)

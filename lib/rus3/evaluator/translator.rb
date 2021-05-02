@@ -34,13 +34,18 @@ module Rus3
       def translate(ast_node)
         return nil if ast_node.nil?
 
-        pp ast_node if @verbose
+        if @verbose
+          print "- translater ==> "
+          pp ast_node
+        end
+
+        method_name = "translate_#{ast_node.type}".intern
         begin
-          m = method("translate_#{ast_node.type}".intern)
-          m.call(ast_node)
-        rescue NameError => _
+          m = method(method_name)
+        rescue
           raise SchemeSyntaxError.new([ast_node.type, ast_node.to_s])
         end
+        m.call(ast_node)
       end
 
       # :stopdoc:
@@ -80,6 +85,8 @@ module Rus3
       def translate_number(ast_node)
         converter = nil
         case ast_node.literal
+        when /\A0\Z/
+          converter = "Integer"
         when /\A[+-]?[1-9][0-9]*\Z/ # 123
           converter = "Integer"
         when /\A[+-]?([0-9]?|[1-9][0-9]*)\.[0-9]+\Z/ # 0.123 or 123.456
@@ -183,6 +190,45 @@ module Rus3
           rb_value = translate(ast_node.expression)
           "#{name} = #{rb_value}"
         end
+      end
+
+      def translate_cond(ast_node)
+        test_and_exps = ast_node.cond_clauses.map{|e| translate(e)}
+
+        first = intermediate = last = nil
+
+        first = test_and_exps[0]
+
+        if test_and_exps.size > 1
+          last = test_and_exps[-1]
+        end
+
+        if test_and_exps.size > 2
+          intermediate = test_and_exps[1..-2]
+        end
+
+        rb_src = []
+        rb_src << "if #{first}"
+
+        if intermediate
+          rb_src.concat(intermediate.map{|e| " elsif #{e}"})
+        end
+
+        if last
+          if /\Aelse/ === last
+            rb_src << last
+          else
+            rb_src << " elsif #{last}"
+          end
+        end
+
+        rb_src.join(";") + "; end"
+      end
+
+      def translate_cond_clause(ast_node)
+        test_src = translate(ast_node.test)
+        exps_src = ast_node.sequence.map{|e| translate(e)}.join(";")
+        "#{test_src}; #{exps_src}"
       end
 
       RB_KEYWORDS_MAP = {

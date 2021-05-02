@@ -245,14 +245,14 @@ module Rus3
 
       # <conditional> -> ( if <test> <consequent> <alternamte> )
       def parse_conditional
-        cond_node = Rus3::AST.instantiate(:conditional, next_token.literal)
-        cond_node.test = parse_test
-        cond_node.consequent = parse_consequent
+        if_node = Rus3::AST.instantiate(:conditional, next_token.literal)
+        if_node.test = parse_test
+        if_node.consequent = parse_consequent
         if peek_token.type != :rparen
-          cond_node.alternate = parse_alternate
+          if_node.alternate = parse_alternate
         end
         next_token              # skip :rparen
-        cond_node
+        if_node
       end
 
       # <test> -> <expression>
@@ -501,7 +501,6 @@ module Rus3
       # ( cond <cond cluase>* ( else <sequence> ) )
       def parse_cond
         cond_node = Rus3::AST.instantiate(:cond, current_token.literal)
-        next_token              # skip "cond"
 
         Kernel.loop {
           if peek_token.type == :rparen
@@ -521,17 +520,17 @@ module Rus3
       # <sequence> -> <command>* <expression>
       # <command> -> <expression>
       def parse_cond_clause
-        clause_node = Rus3::AST.instantiate(:list)
+        clause_node = Rus3::AST.instantiate(:cond_clause)
+        next_token              # skip :lparen
 
-        test_node = parse_test
-        clause_node << test_node
+        clause_node.test = parse_test
 
         Kernel.loop {
           if peek_token.type == :rparen
             next_token
             break
           end
-          clause_node << parse_expression
+          clause_node.add_expression(parse_expression)
         }
         clause_node
       end

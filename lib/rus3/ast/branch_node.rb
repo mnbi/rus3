@@ -304,11 +304,41 @@ module Rus3
         super("cond")
       end
 
+      def type
+        :cond
+      end
+
       def cond_clauses
         @nodes[1..-1]
       end
 
       def add_clause(node)
+        @nodes << node
+      end
+    end
+
+    class CondClauseNode < ListNode
+      def initialize(_ = nil)
+        super(nil, 1)
+      end
+
+      def type
+        :cond_clause
+      end
+
+      def test
+        @nodes[0]
+      end
+
+      def test=(node)
+        @nodes[0] = node
+      end
+
+      def sequence
+        @nodes[1..-1]
+      end
+
+      def add_expression(node)
         @nodes << node
       end
     end
