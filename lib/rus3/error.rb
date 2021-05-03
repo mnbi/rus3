@@ -47,6 +47,7 @@ module Rus3
     :unsupported_feature => "specified feature (`%s`) does not support for %s",
     :cannot_find_file => "cannot find %s",
     :not_implemented_yet => "not implemented yet (%s)",
+    :unknown_operator => "unknown operator: got=%s",
   }
 
   # :startdoc:
@@ -151,6 +152,12 @@ module Rus3
   class NotImplementedYetError < Error
     def initialize(feature)
       super(EMSG[:not_implemented_yet] % feature)
+    end
+  end
+
+  class UknownOperatorError < Error
+    def initialize(operator)
+      super(EMSG[:unknown_operator] % operator)
     end
   end
 

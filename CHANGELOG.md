@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 - (nothing to record here)
 
-## [0.2.0] - 2021-05-02
+## [0.2.0] - 2021-05-03
 ### Added
 - Re-write the parser and evaluator mechanism.
+- Add tests for SchemeParser and Translator.
 - Add a mechanism to replace comparison operator characters in
   identifiers.
   - e.g. `char<?` -> `char_lt?`

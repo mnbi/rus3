@@ -128,6 +128,50 @@ class Rus3ParserSchemeParserTest < Minitest::Test
     }
   end
 
+  def test_it_can_parse_identifier_definition
+    tcs = [
+      "(define foo 3.14)",
+      "(define bar \"BAR\")",
+      "(define hoge (list 1 2 3))",
+      "(define gebo (lambda (x y) (+ x y)))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::IdentifierDefinitionNode, node
+      assert_equal :identifier_definition, node.type
+      assert_equal src, node.to_s
+    }
+  end
+
+  def test_it_can_parse_proc_definition
+    tcs = [
+      "(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::IdentifierDefinitionNode, node
+      assert_equal :identifier_definition, node.type
+      assert_equal :lambda_expression, node.expression.type
+    }
+  end
+
+  def test_it_can_parse_cond
+    tcs = [
+      "(cond ((< n 0) (write \"negative\")))",
+      "(cond ((< n 0) (write \"negative\")) ((= n 0) (write \"zero\")))",
+      "(cond ((< n 0) (write \"negative\")) ((= n 0) (write \"zero\")) (else (write \"positive\")))",
+    ]
+    tcs.each { |src|
+      ast = @parser.parse(src)
+      node = ast[0]
+      assert_kind_of Rus3::AST::CondNode, node
+      assert_equal :cond, node.type
+      assert_equal src, node.to_s
+    }
+  end
+
   private
 
   def assert_simple_expression_type(tcs, klass, type)

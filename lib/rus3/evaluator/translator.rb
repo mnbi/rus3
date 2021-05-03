@@ -98,7 +98,8 @@ module Rus3
 
       def translate_peculiar_identifier(ast_node)
         op_literal = ast_node.literal == "=" ? "==" : ast_node.literal
-        sym = SchemeEvaluator::INFIX_OPS_MAP[op_literal]
+        sym = @procedure_map[op_literal]
+        raise Rus3::UnknownOperatorError, op_literal if sym.nil?
         sym.to_s
       end
 
@@ -213,7 +214,7 @@ module Rus3
 
         if last
           if /\Aelse/ === last
-            rb_src << last
+            rb_src << " #{last}"
           else
             rb_src << " elsif #{last}"
           end
