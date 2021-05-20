@@ -21,13 +21,13 @@ module Rus3
   class Repl
 
     # Indicates the version of the Repl class.
-    REPL_VERSION = "0.2.0"
+    REPL_VERSION = "0.2.1"
 
     class << self
 
       # Starts REPL.
-      def start(parser: nil, evaluator: nil, verbose: false)
-        repl = Repl.new(parser: parser, evaluator: evaluator, verbose: verbose)
+      def start(evaluator: nil, verbose: false)
+        repl = Repl.new(evaluator: evaluator, verbose: verbose)
         repl.loop
       end
 
@@ -35,9 +35,9 @@ module Rus3
 
     # Hods major component names of the REPL.
     COMPONENTS = {
-      :parser    => Parser::DEFAULT_PARSER,
+      :parser    => Rubasteme::Parser,
       :evaluator => Evaluator::DEFAULT_EVALUATOR,
-      :printer   => nil,
+      :printer   => Printer::ChainPrinter,
     }
 
     # Prompt for input.
@@ -51,18 +51,16 @@ module Rus3
     attr_accessor :verbose      # :nodoc:
     attr_accessor :prompt       # :nodoc:
 
-    def initialize(parser: nil, evaluator: nil, verbose: false)
+    def initialize(evaluator: nil, verbose: false)
       comps = COMPONENTS.dup
 
-      comps[:parser] = Parser.const_get("#{parser.capitalize}Parser") if parser
       comps[:evaluator] = Evaluator.const_get("#{evaluator.capitalize}Evaluator") if evaluator
 
       comps.each { |name, klass|
-        instance_variable_set("@#{name}", klass.nil? ? self : klass.new)
+        instance_variable_set("@#{name}", klass.new)
       }
 
       @prompt = PROMPT
-      @parser.prompt = PROMPT
 
       @verbose = verbose
       @evaluator.verbose = verbose
@@ -77,17 +75,18 @@ module Rus3
     end
 
     def loop
-      msg = Kernel.loop {               # LOOP
+      msg = Kernel.loop {       # LOOP
         begin
-          ast = @parser.read(STDIN)     # READ
+          source = read(STDIN)  # READ
+          break FAREWELL_MESSAGE if source.nil?
+          ast = @parser.parse(Rbscmlex::Lexer.new(source))
         rescue SchemeSyntaxError => e
           puts "ERROR" + (@verbose ? "(READ)" : "")  + ": %s" % e
           next
         end
-        break FAREWELL_MESSAGE if ast.nil?
 
         begin
-          value = @evaluator.eval(ast)  # EVAL
+          value = @evaluator.eval(ast) # EVAL
         rescue SyntaxError, StandardError => e
           puts "ERROR" + (@verbose ? "(EVAL)" : "")  + ": %s" % e
           next
@@ -95,7 +94,7 @@ module Rus3
 
         history_push(value)
 
-        @printer.print(value)              # PRINT
+        @printer.print(value)   # PRINT
       }
       puts "#{msg}" unless msg.nil?
     end
@@ -125,28 +124,23 @@ module Rus3
     require "readline"
 
     def read(io = STDIN)
-      Readline::readline(@prompt, true)
-    end
-
-    def eval(ast)
-      ast
-    end
-
-    def print(obj)
-      prefix = "==> "
-      prefix += "[#{obj.class}]: " if @verbose
-      Kernel.print prefix
-      pp obj
+      program_source = nil
+      if io == STDIN
+        program_source = Readline::readline(@prompt, true)
+      else
+        program_source = io.readlines(chomp: true).join(" ")
+      end
+      program_source
     end
 
     private
 
     def version_message(comp_name)
-      vmsg = nil
+      vmsg = ""
       component = instance_variable_get("@#{comp_name}")
-      if component.nil? or component == self
-        vmsg = ":using :built-in :#{comp_name}"
-      else
+      if component.class.respond_to?(:version)
+        vmsg = "#{component.class.version}"
+      elsif component.respond_to?(:version)
         vmsg = "#{component.version}"
       end
       vmsg
@@ -225,7 +219,8 @@ HELP
           scheme_source = File.readlines(path, chomp: true).join(" ")
           result = ast = nil
           if @scm_parser.respond_to?(:parse)
-            ast = @scm_parser.parse(scheme_source)
+            lexer = Rbscmlex::Lexer.new(scheme_source)
+            ast = @scm_parser.parse(lexer)
           end
           if @scm_evaluator.respond_to?(:eval)
             result = @scm_evaluator.eval(ast)

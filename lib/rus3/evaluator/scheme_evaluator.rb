@@ -19,10 +19,9 @@ module Rus3
         super
 
         @env = Environment.new
-        define_procs_for_infix_ops
-
         @translator = Translator.new
-        @translator.add_procedure_map(INFIX_OPS_MAP)
+        @translator.add_procedure_map(ARITHMETIC_OPS_MAP)
+        @translator.add_procedure_map(COMPARISON_OPS_MAP)
       end
 
       def verbose=(verbose)
@@ -48,30 +47,26 @@ module Rus3
         @env.binding
       end
 
-      INFIX_OPS_MAP = {
+      ARITHMETIC_OPS_MAP = {
         "+"  => "add",
         "-"  => "subtract",
         "*"  => "mul",
         "/"  => "div",
         "%"  => "mod",
+      }
+
+      COMPARISON_OPS_MAP = {
         "<"  => "lt?",
         "<=" => "le?",
         ">"  => "gt?",
         ">=" => "ge?",
-        "==" => "eqv?",
+        "=" => "same_value?",
       }
 
       private
 
       def translate_ast(ast)
         ast.map{|node| @translator.translate(node)}.join("\n")
-      end
-
-      def define_procs_for_infix_ops
-        r = @env.binding.receiver
-        INFIX_OPS_MAP.each { |op, proc_name|
-          r.instance_eval("def #{proc_name}(op1, op2); op1 #{op} op2; end")
-        }
       end
 
     end
