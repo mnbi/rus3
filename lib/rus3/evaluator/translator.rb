@@ -36,7 +36,8 @@ module Rus3
           pp ast_node
         end
 
-        method_name = "translate_#{ast_node.type}".intern
+        type = ast_node.type.to_s.delete_prefix("ast_")
+        method_name = "translate_#{type}".intern
         begin
           m = method(method_name)
         rescue
@@ -49,6 +50,10 @@ module Rus3
 
       private
 
+      def translate_empty_list(_)
+        EmptyList::EMPTY_LIST.to_s
+      end
+
       def translate_boolean(ast_node)
         case ast_node.literal[0..1]
         when "#f"
@@ -56,7 +61,7 @@ module Rus3
         when "#t"
           "true"
         else
-          raise SchemeSyntaxError.new([:boolean, ast_node.to_s])
+          raise SchemeSyntaxError.new([:ast_boolean, ast_node.to_s])
         end
       end
 
@@ -96,13 +101,6 @@ module Rus3
         "#{converter}(\"#{ast_node.literal}\")"
       end
 
-      def translate_peculiar_identifier(ast_node)
-        op_literal = ast_node.literal == "=" ? "==" : ast_node.literal
-        sym = @procedure_map[op_literal]
-        raise Rus3::UnknownOperatorError, op_literal if sym.nil?
-        sym.to_s
-      end
-
       def translate_list(ast_node)
         elements = ast_node.map{|e| translate(e)}.join(", ")
         "[#{elements}]"
@@ -113,10 +111,33 @@ module Rus3
         "vector(#{obj_src})"
       end
 
+      def translate_quotation(ast_node)
+        propagate_quotation(ast_node[0])
+      end
+
+      def propagate_quotation(ast_node)
+        case ast_node.type
+        when :ast_list, :ast_procedure_call, :ast_lambda_expression, :ast_conditional, :ast_assignment
+          elements = ast_node.map{|child| propagate_quotation(child)}
+          "[" + elements.join(", ") + "]"
+        when :ast_vector
+          elements = ast_node.map{|child| propagate_quotation(child)}
+          "vector(" + elements.join(", ")  + ")"
+        when :ast_boolean, :ast_character, :ast_string
+          translate(ast_node)
+        when :ast_number
+          translate_number(ast_node)
+        when :ast_identifier
+          ":#{ast_node.to_s}"
+        else
+          raise SchemeSyntaxError.new([ast_node.type, ast_node.to_s])
+        end
+      end
+
       def translate_procedure_call(ast_node)
         operands = ast_node.operands.map{|e| translate(e)}.join(", ")
         operator = translate(ast_node.operator)
-        if ast_node.operator.type == :lambda_expression
+        if ast_node.operator.type == :ast_lambda_expression
           "#{operator}.call(#{operands})"
         else
           "#{operator}(#{operands})"
@@ -155,32 +176,9 @@ module Rus3
         "#{identifier} = #{expression}"
       end
 
-      def translate_quotation(ast_node)
-        propagate_quotation(ast_node[1])
-      end
-
-      def propagate_quotation(ast_node)
-        case ast_node.type
-        when :list, :procedure_call, :lambda_expression, :conditional, :assignment
-          elements = ast_node.map{|child| propagate_quotation(child)}
-          "[" + elements.join(", ") + "]"
-        when :vector
-          elements = ast_node.map{|child| propagate_quotation(child)}
-          "vector(" + elements.join(", ")  + ")"
-        when :boolean, :character, :string
-          translate(ast_node)
-        when :number
-          ast_node.to_s
-        when :identifier, :peculiar_identifier
-          ":#{ast_node.to_s}"
-        else
-          raise SchemeSyntaxError.new([ast_node.type, ast_node.to_s])
-        end
-      end
-
       def translate_identifier_definition(ast_node)
         name = translate_identifier(ast_node.identifier)
-        if ast_node.expression.type == :lambda_expression
+        if ast_node.expression.type == :ast_lambda_expression
           def_formals = translate_formals(ast_node.expression)
           body = translate_body(ast_node.expression)
           "def #{name}(#{def_formals}); #{body}; end"
@@ -229,11 +227,31 @@ module Rus3
         "#{test_src}; #{exps_src}"
       end
 
+      def translate_case(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_and(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_or(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_when(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_unless(ast_node)
+        "not implemented yet"
+      end
+
       def translate_let(ast_node)
         formals = []
         args = []
 
-        ast_node.bind_specs.each { |spec|
+        ast_node.bindings.each { |spec|
           formals << translate_identifier(spec.identifier)
           args << translate(spec.expression)
         }
@@ -241,6 +259,26 @@ module Rus3
         body = translate_body(ast_node)
 
         "lambda{|#{formals.join(', ')}| #{body}}.call(#{args.join(', ')})"
+      end
+
+      def translate_let_star(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_letrec(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_letrec_star(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_begin(ast_node)
+        "not implemented yet"
+      end
+
+      def translate_do(ast_node)
+        "not implemented yet"
       end
 
       RB_KEYWORDS_MAP = {
@@ -295,7 +333,7 @@ module Rus3
         ">=" => "ge",
       }
 
-      EXTENDED_REGEXP = Regexp.new("[#{Rus3::Lexer::EXTENDED_CHARS}]")
+      EXTENDED_REGEXP = Regexp.new("[!\\$%&\\*\\+\\-\\./:<=>\\?@\\^_~]")
 
       EXTENDED_CHARS_MAP = {
         "!" => "!",             # no conversion
@@ -319,16 +357,21 @@ module Rus3
       }
 
       def replace_extended_char(literal)
-        result = literal
+        case literal
+        when /\A[+\-*\/%=]\Z/, /\A[<>]=?\Z/
+          md = Regexp.last_match
+          @procedure_map[md.to_s]
+        else
+          result = literal
+          COMPARISON_OPS_MAP.each { |op, word|
+            comparison_regexp = Regexp.new("#{op}\\?\\Z")
+            if comparison_regexp === literal
+              result = literal.sub(comparison_regexp, "_#{word}?")
+            end
+          }
 
-        COMPARISON_OPS_MAP.each { |op, word|
-          comparison_regexp = Regexp.new("#{op}\\?\\Z")
-          if comparison_regexp === literal
-            result = literal.sub(comparison_regexp, "_#{word}?")
-          end
-        }
-
-        result.gsub(EXTENDED_REGEXP, EXTENDED_CHARS_MAP)
+          result.gsub(EXTENDED_REGEXP, EXTENDED_CHARS_MAP)
+        end
       end
 
       # :startdoc:

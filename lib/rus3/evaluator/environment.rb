@@ -11,6 +11,8 @@ module Rus3
       include Rus3::Procedure::List
       include Rus3::Procedure::Char
       include Rus3::Procedure::Predicate
+      include Rus3::Procedure::Comparison
+      include Rus3::Procedure::Arithmetic
       include Rus3::EmptyList
 
       attr_reader :binding

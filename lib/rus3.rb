@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "rbscmlex"
+require "rubasteme"
+
 module Rus3
 
   # An empty list is a special object in Scheme language.  The role
@@ -43,16 +46,14 @@ module Rus3
 
   require_relative "rus3/procedure/utils"
   require_relative "rus3/procedure/predicate"
+  require_relative "rus3/procedure/arithmetic"
+  require_relative "rus3/procedure/comparison"
   require_relative "rus3/procedure/char"
   require_relative "rus3/procedure/list"
   require_relative "rus3/procedure/vector"
   require_relative "rus3/procedure/control"
   require_relative "rus3/procedure/write"
 
-  require_relative "rus3/ast"
-  require_relative "rus3/token"
-  require_relative "rus3/lexer"
-  require_relative "rus3/parser"
   require_relative "rus3/evaluator"
   require_relative "rus3/printer"
   require_relative "rus3/repl"

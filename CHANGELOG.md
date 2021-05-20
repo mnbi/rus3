@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 - (nothing to record here)
 
+## [0.2.1] - 20201-05-20
+### Changed
+- Use Rbscmlex instead of built-in lexer. (#6)
+- Use Rubasteme instead of built-in AST and parser. (#6)
+
+### Fixed
+- Fix #5: too old `required_ruby_version`.
+
 ## [0.2.0] - 2021-05-03
 ### Added
 - Re-write the parser and evaluator mechanism.

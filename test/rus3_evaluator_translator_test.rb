@@ -5,7 +5,7 @@ require "test_helper"
 class Rus3EvaluatorTranslatorfTest < Minitest::Test
 
   def setup
-    @parser = Rus3::Parser::SchemeParser.new
+    @parser = Rubasteme.parser
     @translator = Rus3::Evaluator::Translator.new
   end
 
@@ -37,8 +37,9 @@ class Rus3EvaluatorTranslatorfTest < Minitest::Test
   end
 
   def test_it_can_translate_list
-    tcs = { "'(1 2 3)" => "[1, 2, 3]",
-            "'(1 (2 3) (4 (5 6) 7))" => "[1, [2, 3], [4, [5, 6], 7]]", }
+    tcs = { "'(1 2 3)" => '[Integer("1"), Integer("2"), Integer("3")]',
+            "'(1 (2 3) (4 (5 6) 7))" =>
+            '[Integer("1"), [Integer("2"), Integer("3")], [Integer("4"), [Integer("5"), Integer("6")], Integer("7")]]', }
     assert_translate(tcs)
   end
 
@@ -119,7 +120,8 @@ class Rus3EvaluatorTranslatorfTest < Minitest::Test
   end
 
   def ast_node(src)
-    @parser.parse(src)[0]
+    lexer = Rbscmlex::Lexer.new(src)
+    @parser.parse(lexer)[0]
   end
 
 end
